@@ -1,0 +1,672 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "_ics20TransferBank",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_picasso_params",
+        "type": "tuple",
+        "internalType": "struct HopParams",
+        "components": [
+          {
+            "name": "sourcePort",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "sourceChannel",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "denomTimeout",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "receiver",
+            "type": "string",
+            "internalType": "string"
+          }
+        ]
+      },
+      {
+        "name": "_next_hop_params",
+        "type": "tuple",
+        "internalType": "struct HopParams",
+        "components": [
+          {
+            "name": "sourcePort",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "sourceChannel",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "denomTimeout",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "receiver",
+            "type": "string",
+            "internalType": "string"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "fallback",
+    "stateMutability": "payable"
+  },
+  {
+    "type": "receive",
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "BRIDGE_CONTRACT",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "DUMMY",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "addressToString",
+    "inputs": [
+      {
+        "name": "_addr",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "changeIcs20TransferBank",
+    "inputs": [
+      {
+        "name": "_ics20TransferBank",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "changeNextHopParams",
+    "inputs": [
+      {
+        "name": "_next_hop_params",
+        "type": "tuple",
+        "internalType": "struct HopParams",
+        "components": [
+          {
+            "name": "sourcePort",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "sourceChannel",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "denomTimeout",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "receiver",
+            "type": "string",
+            "internalType": "string"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "changeOwner",
+    "inputs": [
+      {
+        "name": "_owner",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "changePicassoParams",
+    "inputs": [
+      {
+        "name": "_picasso_params",
+        "type": "tuple",
+        "internalType": "struct HopParams",
+        "components": [
+          {
+            "name": "sourcePort",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "sourceChannel",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "denomTimeout",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "receiver",
+            "type": "string",
+            "internalType": "string"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "escrowFunds",
+    "inputs": [
+      {
+        "name": "intentId",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "newIntentInfo",
+        "type": "tuple",
+        "internalType": "struct IntentInfo",
+        "components": [
+          {
+            "name": "tokenIn",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "amountIn",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "srcUser",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "tokenOut",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "amountOut",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "dstUser",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "winnerSolver",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "timeout",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "executeCall",
+    "inputs": [
+      {
+        "name": "target",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "data",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "ics20TransferBank",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IICS20TransferBank"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "intents",
+    "inputs": [
+      {
+        "name": "",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "tokenIn",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "amountIn",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "srcUser",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "tokenOut",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "amountOut",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "dstUser",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "winnerSolver",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "timeout",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "next_hop_params",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "sourcePort",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "sourceChannel",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "denomTimeout",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "receiver",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "owner",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "picasso_params",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "sourcePort",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "sourceChannel",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "denomTimeout",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "receiver",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "sendFundsToUser",
+    "inputs": [
+      {
+        "name": "solverTransferData",
+        "type": "tuple",
+        "internalType": "struct SolverTransfer",
+        "components": [
+          {
+            "name": "intentId",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "tokenOut",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "amountOut",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "dstUser",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "singleDomain",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "uintToString",
+    "inputs": [
+      {
+        "name": "_i",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "updateAuctionData",
+    "inputs": [
+      {
+        "name": "intentId",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "amountOut",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "winnerSolver",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "userCancelIntent",
+    "inputs": [
+      {
+        "name": "intentId",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "singleDomain",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "CrossChainMsgSolver",
+    "inputs": [
+      {
+        "name": "intentId",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "winnerSolver",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "token",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "user",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "amount",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "CrossChainMsgUser",
+    "inputs": [
+      {
+        "name": "intentId",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "user",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "FundsEscrowed",
+    "inputs": [
+      {
+        "name": "intent",
+        "type": "tuple",
+        "indexed": false,
+        "internalType": "struct IntentInfo",
+        "components": [
+          {
+            "name": "tokenIn",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "amountIn",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "srcUser",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "tokenOut",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "amountOut",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "dstUser",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "winnerSolver",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "timeout",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "OnReceiveMsg",
+    "inputs": [
+      {
+        "name": "token",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "amount",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "to",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
+  }
+]

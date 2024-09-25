@@ -1,0 +1,8 @@
+[package]
+name = "mantis-common"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ruint = "1.12.3"
+borsh = "0.10"

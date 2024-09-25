@@ -1,0 +1,32 @@
+[package]
+name = "mantis-escrow-program"
+version = "0.1.0"
+description = "Created with Anchor"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "mantis_escrow_program"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build"]
+
+[dependencies]
+mantis-common = { path = "../../../common" }
+anchor-lang = { version = "0.29.0" }
+borsh = "=0.10.3"
+#solana-program = "=1.17.17"
+bincode = "1.3.3"
+hex = "0.4.3"
+#signature = "1.6.4"
+
+[dev-dependencies]
+anchor-syn = "0.29.0"
+#solana-sdk = "=1.17.17"
+#anchor-client = "0.29.0"
+#solana-sdk = {git="https://github.com/ComposableFi/mantis-solana", rev = "d92c52575aaf430ca1f06bc2589f26b0fedde7bf" }
