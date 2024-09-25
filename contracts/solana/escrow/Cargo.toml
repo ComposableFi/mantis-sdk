@@ -19,7 +19,7 @@ idl-build = ["anchor-lang/idl-build"]
 [dependencies]
 mantis-common = { path = "../../../common" }
 anchor-lang = { version = "0.29.0" }
-borsh = "=0.10.3"
+borsh = "=1.5.1"
 #solana-program = "=1.17.17"
 bincode = "1.3.3"
 hex = "0.4.3"
