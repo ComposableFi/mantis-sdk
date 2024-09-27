@@ -271,7 +271,7 @@
       }
     ],
     "outputs": [],
-    "stateMutability": "nonpayable"
+    "stateMutability": "payable"
   },
   {
     "type": "function",
@@ -394,6 +394,111 @@
   },
   {
     "type": "function",
+    "name": "onReceiveTransfer",
+    "inputs": [
+      {
+        "name": "transferData",
+        "type": "tuple",
+        "internalType": "struct TransferData",
+        "components": [
+          {
+            "name": "denom",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "sender",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "receiver",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "amount",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "memo",
+            "type": "string",
+            "internalType": "string"
+          }
+        ]
+      },
+      {
+        "name": "packetData",
+        "type": "tuple",
+        "internalType": "struct PacketData",
+        "components": [
+          {
+            "name": "sequence",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "source_port",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "source_channel",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "destination_port",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "destination_channel",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          },
+          {
+            "name": "timeout_height",
+            "type": "tuple",
+            "internalType": "struct Height",
+            "components": [
+              {
+                "name": "revision_number",
+                "type": "uint64",
+                "internalType": "uint64"
+              },
+              {
+                "name": "revision_height",
+                "type": "uint64",
+                "internalType": "uint64"
+              }
+            ]
+          },
+          {
+            "name": "timeout_timestamp",
+            "type": "uint64",
+            "internalType": "uint64"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "owner",
     "inputs": [],
     "outputs": [
@@ -466,6 +571,11 @@
             "name": "singleDomain",
             "type": "bool",
             "internalType": "bool"
+          },
+          {
+            "name": "solverOut",
+            "type": "string",
+            "internalType": "string"
           }
         ]
       }
@@ -566,6 +676,12 @@
         "type": "string",
         "indexed": false,
         "internalType": "string"
+      },
+      {
+        "name": "solverOut",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
       }
     ],
     "anonymous": false
@@ -593,6 +709,12 @@
     "type": "event",
     "name": "FundsEscrowed",
     "inputs": [
+      {
+        "name": "intentId",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
       {
         "name": "intent",
         "type": "tuple",
@@ -640,31 +762,6 @@
             "internalType": "uint256"
           }
         ]
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "OnReceiveMsg",
-    "inputs": [
-      {
-        "name": "token",
-        "type": "string",
-        "indexed": false,
-        "internalType": "string"
-      },
-      {
-        "name": "amount",
-        "type": "string",
-        "indexed": false,
-        "internalType": "string"
-      },
-      {
-        "name": "to",
-        "type": "string",
-        "indexed": false,
-        "internalType": "string"
       }
     ],
     "anonymous": false

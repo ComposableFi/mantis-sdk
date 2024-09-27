@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.25;
+pragma solidity ^0.8.26;
 
-import "contracts/ethereum/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
  * @dev Interface for the ICS20 transfer bank to facilitate cross-chain token transfers.
@@ -29,6 +29,7 @@ struct SolverTransfer {
     uint256 amountOut;         // Amount of tokens to be transferred
     address dstUser;           // Destination user for the transfer
     bool singleDomain;         // Boolean flag indicating if the transfer is within a single domain
+    string solverOut;          // Address solver
 }
 
 /**
@@ -98,10 +99,9 @@ contract Escrow {
     using SafeERC20 for IERC20;
 
     // Events emitted for cross-chain communication and state updates
-    event CrossChainMsgSolver(string intentId, string winnerSolver, string token, string user, string amount);
+    event CrossChainMsgSolver(string intentId, string winnerSolver, string token, string user, string amount, string solverOut);
     event CrossChainMsgUser(string intentId, string user);
-    event OnReceiveMsg(string token, string amount, string to);
-    event FundsEscrowed(IntentInfo intent);
+    event FundsEscrowed(string intentId, IntentInfo intent);
 
     // Constant variables for demo purposes
     string public constant DUMMY = "3dsg7C6LGnCL17i4a4qU5N3n6RsKR7AFpVUyRc1hToAQ";
@@ -132,26 +132,49 @@ contract Escrow {
         next_hop_params = _next_hop_params;
     }
 
-    /*function onReceiveTransfer(
-        TransferData memory transferData,
+    /**
+    * @dev Handles the receipt of a cross-chain transfer, processes the transfer data and packet data, and handles the funds based on the memo content.
+    * Depending on the memo, it either processes a user withdrawal or handles the transfer to a solver.
+    *
+    * @param transferData The data associated with the transfer, including the denomination and memo.
+    * @param packetData The data associated with the packet sent in the cross-chain message.
+    * @return A boolean indicating if the transfer processing was successful.
+    */
+    function onReceiveTransfer(
+        TransferData calldata transferData,
         PacketData calldata packetData
-    ) external view returns (bool) {
+    ) external returns (bool) {
         require(msg.sender == BRIDGE_CONTRACT, "msg.sender != BRIDGE_CONTRACT");
         string memory dummy = extractString(transferData.denom);
         require(keccak256(abi.encodePacked(dummy)) == keccak256(abi.encodePacked(DUMMY)), "denom doesn't have DUMMY token");
 
         (
+            bool withdraw_user,
             string memory intentId,
-            string memory winnerSolver,
+            string memory from,
             string memory token,
-            string memory user,
-            string memory amount
+            string memory to,
+            string memory amount,
+            string memory solver_out
         ) = splitMemo(transferData.memo);
 
+        IntentInfo memory intent = intents[intentId];
+        require(intent.srcUser != address(0), "intent doesn't exist");
 
+        if (withdraw_user) {
+            require(keccak256(abi.encodePacked(intent.dstUser)) == keccak256(abi.encodePacked(from)), "intent.dstUser != from");
+            IERC20(intent.tokenIn).safeTransfer(intent.srcUser, intent.amountIn);
+        }
+        else {
+            require(keccak256(abi.encodePacked(intent.winnerSolver)) == keccak256(abi.encodePacked(from)), "intent.dstUser != from");
+            require(keccak256(abi.encodePacked(intent.tokenOut)) == keccak256(abi.encodePacked(token)), "intent.tokenOut != token");
+            require(keccak256(abi.encodePacked(intent.dstUser)) == keccak256(abi.encodePacked(to)), "intent.dstUser != to");
+            require(parseUint(intent.amountOut) <= parseUint(amount), "intent.amountOut > amount");
+            IERC20(intent.tokenIn).safeTransfer(parseAddress(solver_out), intent.amountIn);
+        }
 
         return true;
-    }*/
+    }
 
     /**
      * @dev Function to escrow funds for a user based on an intent.
@@ -159,10 +182,11 @@ contract Escrow {
      * @param intentId Unique identifier for the intent.
      * @param newIntentInfo Struct containing details of the intent.
      */
+    // ["0x39F98f32eb5fe4C568c7252e45fd48f8DC415d8e","1000","0x25967E0621288bc958DC282c0CA6F451b17aef1c","0x39F98f32eb5fe4C568c7252e45fd48f8DC415d8e","500","0x39F98f32eb5fe4C568c7252e45fd48f8DC415d8e","","3600"]
     function escrowFunds(
         string calldata intentId,
         IntentInfo calldata newIntentInfo
-    ) public onlyOwner {
+    ) public payable {
         IntentInfo memory intent = intents[intentId];
         require(intent.srcUser == address(0), "intent already exist");
         require(bytes(newIntentInfo.winnerSolver).length == 0, "winnerSolver must be empty string");
@@ -171,7 +195,7 @@ contract Escrow {
         IERC20(newIntentInfo.tokenIn).safeTransferFrom(msg.sender, address(this), newIntentInfo.amountIn);
         intents[intentId] = newIntentInfo;
 
-        emit FundsEscrowed(intent);
+        emit FundsEscrowed(intentId, newIntentInfo);
     }
 
     /**
@@ -231,7 +255,8 @@ contract Escrow {
                 addressToString(msg.sender),
                 addressToString(solverTransferData.tokenOut),
                 addressToString(solverTransferData.dstUser),
-                uintToString(solverTransferData.amountOut)
+                uintToString(solverTransferData.amountOut),
+                solverTransferData.solverOut
             );
         }
     }
@@ -261,66 +286,129 @@ contract Escrow {
         }
     }
 
-    function splitMemo(string memory memo) internal pure returns (
+    /**
+    * @dev Splits the memo string into individual components based on the format.
+    * The memo format can be one of two formats:
+    * 1. Short format: 'false,intentId,from'
+    * 2. Full format: 'true,intentId,from,token,to,amount'
+    *
+    * @param memo The full memo string with the bool as the first part, followed by the respective fields.
+    * @return isFullFormat A boolean indicating if the memo is in the full format or the short format.
+    * @return intentId The intent identifier extracted from the memo.
+    * @return from The "from" address extracted from the memo.
+    * @return token The token address (only in full format, empty in short format).
+    * @return to The "to" address (only in full format, empty in short format).
+    * @return amount The amount of tokens (only in full format, empty in short format).
+    */
+    function splitMemo(string calldata memo) internal pure returns (
+        bool isFullFormat,
         string memory intentId,
-        string memory winnerSolver,
+        string memory from,
         string memory token,
-        string memory user,
-        string memory amount
+        string memory to,
+        string memory amount,
+        string memory solver_out
     ) {
-        bytes memory memoBytes = bytes(memo);
+        // Split the memo string into parts by commas
+        string[] memory parts = splitStringByDelimiter(memo, ",");
 
-        // Fixed lengths for intentId, winnerSolver, token, and user
-        uint256 intentIdLength = 8;
-        uint256 fixedLength = 42;
+        // Extract the bool from the first part of the string
+        isFullFormat = (keccak256(bytes(parts[0])) == keccak256(bytes("true")));
 
-        // Ensure the memo is long enough
-        require(memoBytes.length > intentIdLength + 3 * fixedLength, "Invalid input length");
+        if (isFullFormat) {
+            // Full format requires exactly 6 parts
+            require(parts.length == 6, "Invalid full format");
 
-        // Part 1: intentId (first 8 characters)
-        intentId = substring(memo, 0, intentIdLength);
+            // Assign the fields in the full format
+            intentId = parts[1];
+            from = parts[2];
+            token = parts[3];
+            to = parts[4];
+            amount = parts[5];
+            solver_out = parts[6];
+        } else {
+            // Short format requires exactly 3 parts
+            require(parts.length == 3, "Invalid short format");
 
-        // Part 2: winnerSolver (next 42 characters after intentId)
-        winnerSolver = substring(memo, intentIdLength, intentIdLength + fixedLength);
+            // Assign the fields in the short format
+            intentId = parts[1];
+            from = parts[2];
 
-        // Part 3: token (next 42 characters after winnerSolver)
-        token = substring(memo, intentIdLength + fixedLength, intentIdLength + 2 * fixedLength);
-
-        // Part 4: user (next 42 characters after token)
-        user = substring(memo, intentIdLength + 2 * fixedLength, intentIdLength + 3 * fixedLength);
-
-        // Find the last comma and extract the amount (last part after the final comma)
-        uint256 lastComma = findLastComma(memo);
-        require(lastComma != 0, "No comma found in the memo");
-
-        // Part 5: amount (from last comma to the end of the string)
-        amount = substring(memo, lastComma + 1, memoBytes.length);
-    }
-
-    // Helper function to extract a substring
-    function substring(string memory str, uint startIndex, uint endIndex) internal pure returns (string memory) {
-        bytes memory strBytes = bytes(str);
-        bytes memory result = new bytes(endIndex - startIndex);
-
-        for (uint i = startIndex; i < endIndex; i++) {
-            result[i - startIndex] = strBytes[i];
+            // Leave token, to, and amount as empty strings
+            token = "";
+            to = "";
+            amount = "";
         }
-
-        return string(result);
     }
 
-    // Helper function to find the position of the last comma in the string
-    function findLastComma(string memory memo) internal pure returns (uint256) {
-        bytes memory memoBytes = bytes(memo);
+    /**
+    * @dev Splits a string into an array of substrings based on a delimiter.
+    *
+    * @param str The input string to be split.
+    * @param delimiter The delimiter used to split the string.
+    * @return An array of substrings split by the delimiter.
+    */
+    function splitStringByDelimiter(string memory str, string memory delimiter) internal pure returns (string[] memory) {
+        bytes memory strBytes = bytes(str);
+        bytes memory delimiterBytes = bytes(delimiter);
+        uint256 delimiterLength = delimiterBytes.length;
 
-        for (uint256 i = memoBytes.length; i > 0; i--) {
-            if (memoBytes[i - 1] == bytes1(",")) {
-                return i - 1;  // Return the position of the last comma
+        // Calculate how many substrings we will have
+        uint256 count = 1;
+        for (uint256 i = 0; i < strBytes.length - delimiterLength + 1; i++) {
+            bool _match = true;
+            for (uint256 j = 0; j < delimiterLength; j++) {
+                if (strBytes[i + j] != delimiterBytes[j]) {
+                    _match = false;
+                    break;
+                }
+            }
+            if (_match) {
+                count++;
+                i += delimiterLength - 1;
             }
         }
 
-        return 0;  // Return 0 if no comma is found
+        // Split the string into parts
+        string[] memory result = new string[](count);
+        uint256 start = 0;
+        uint256 resultIndex = 0;
+        for (uint256 i = 0; i < strBytes.length - delimiterLength + 1; i++) {
+            bool _match = true;
+            for (uint256 j = 0; j < delimiterLength; j++) {
+                if (strBytes[i + j] != delimiterBytes[j]) {
+                    _match = false;
+                    break;
+                }
+            }
+            if (_match) {
+                result[resultIndex++] = substring(str, start, i);
+                start = i + delimiterLength;
+                i += delimiterLength - 1;
+            }
+        }
+        result[resultIndex] = substring(str, start, strBytes.length);
+
+        return result;
     }
+
+    /**
+    * @dev Extracts a substring from a string.
+    *
+    * @param str The input string from which the substring will be extracted.
+    * @param startIndex The start index of the substring (inclusive).
+    * @param endIndex The end index of the substring (exclusive).
+    * @return The extracted substring.
+    */
+    function substring(string memory str, uint256 startIndex, uint256 endIndex) internal pure returns (string memory) {
+        bytes memory strBytes = bytes(str);
+        bytes memory result = new bytes(endIndex - startIndex);
+        for (uint256 i = startIndex; i < endIndex; i++) {
+            result[i - startIndex] = strBytes[i];
+        }
+        return string(result);
+    }
+
 
     /**
      * @dev Parse a string into an address.
@@ -483,4 +571,3 @@ contract Escrow {
     // Receive function to receive Ether
     receive() external payable {}
 }
-
