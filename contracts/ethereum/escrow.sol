@@ -24,7 +24,7 @@ interface IICS20TransferBank {
  * Contains data for transferring tokens from a solver to a user.
  */
 struct SolverTransfer {
-    string intentId;           // Unique identifier for the intent
+    uint intentId;             // Unique identifier for the intent
     address tokenOut;          // Address of the token to be transferred
     uint256 amountOut;         // Amount of tokens to be transferred
     address dstUser;           // Destination user for the transfer
@@ -52,7 +52,7 @@ struct IntentInfo {
     uint256 amountIn;          // Amount of input tokens
     address srcUser;           // Source user address
     string tokenOut;           // Output token (denomination) as a string
-    string amountOut;          // Amount of output tokens
+    uint256 amountOut;          // Amount of output tokens
     string dstUser;            // Destination user address
     string winnerSolver;       // Address of the winning solver
     uint256 timeout;           // Timeout for the intent
@@ -99,9 +99,9 @@ contract Escrow {
     using SafeERC20 for IERC20;
 
     // Events emitted for cross-chain communication and state updates
-    event CrossChainMsgSolver(string intentId, string winnerSolver, string token, string user, string amount, string solverOut);
-    event CrossChainMsgUser(string intentId, string user);
-    event FundsEscrowed(string intentId, IntentInfo intent);
+    event CrossChainMsgSolver(uint intentId, string winnerSolver, string token, address user, uint amount, string solverOut);
+    event CrossChainMsgUser(uint intentId, address user);
+    event FundsEscrowed(uint intentId);
 
     // Constant variables for demo purposes
     string public constant DUMMY = "3dsg7C6LGnCL17i4a4qU5N3n6RsKR7AFpVUyRc1hToAQ";
@@ -112,7 +112,8 @@ contract Escrow {
     IICS20TransferBank public ics20TransferBank;     // ICS20 transfer bank instance for cross-chain transfers
     HopParams public picasso_params;                 // Parameters for Picasso hop
     HopParams public next_hop_params;                // Parameters for the next hop transfer
-    mapping(string => IntentInfo) public intents;    // Mapping to store intents by their ID
+    mapping(uint => IntentInfo) public intents;      // Mapping to store intents by their ID
+    uint nextIntentId;
 
     /**
      * @dev Constructor to initialize the Escrow contract with specified parameters.
@@ -158,7 +159,7 @@ contract Escrow {
             string memory solver_out
         ) = splitMemo(transferData.memo);
 
-        IntentInfo memory intent = intents[intentId];
+        IntentInfo memory intent = intents[parseUint(intentId)];
         require(intent.srcUser != address(0), "intent doesn't exist");
 
         if (withdraw_user) {
@@ -179,14 +180,13 @@ contract Escrow {
     /**
      * @dev Function to escrow funds for a user based on an intent.
      * The user must approve the token transfer to the Escrow contract.
-     * @param intentId Unique identifier for the intent.
      * @param newIntentInfo Struct containing details of the intent.
      */
     // ["0x39F98f32eb5fe4C568c7252e45fd48f8DC415d8e","1000","0x25967E0621288bc958DC282c0CA6F451b17aef1c","0x39F98f32eb5fe4C568c7252e45fd48f8DC415d8e","500","0x39F98f32eb5fe4C568c7252e45fd48f8DC415d8e","","3600"]
     function escrowFunds(
-        string calldata intentId,
         IntentInfo calldata newIntentInfo
-    ) public payable {
+    ) public payable returns (uint) {
+        uint intentId = nextIntentId++;
         IntentInfo memory intent = intents[intentId];
         require(intent.srcUser == address(0), "intent already exist");
         require(bytes(newIntentInfo.winnerSolver).length == 0, "winnerSolver must be empty string");
@@ -195,7 +195,8 @@ contract Escrow {
         IERC20(newIntentInfo.tokenIn).safeTransferFrom(msg.sender, address(this), newIntentInfo.amountIn);
         intents[intentId] = newIntentInfo;
 
-        emit FundsEscrowed(intentId, newIntentInfo);
+        emit FundsEscrowed(intentId);
+        return intentId;
     }
 
     /**
@@ -205,8 +206,8 @@ contract Escrow {
      * @param winnerSolver Address of the winning solver.
      */
     function updateAuctionData(
-        string calldata intentId,
-        string calldata amountOut,
+        uint intentId,
+        uint amountOut,
         string calldata winnerSolver
     ) public onlyOwner {
         IntentInfo storage intent = intents[intentId];
@@ -254,8 +255,8 @@ contract Escrow {
                 solverTransferData.intentId,
                 addressToString(msg.sender),
                 addressToString(solverTransferData.tokenOut),
-                addressToString(solverTransferData.dstUser),
-                uintToString(solverTransferData.amountOut),
+                solverTransferData.dstUser,
+                solverTransferData.amountOut,
                 solverTransferData.solverOut
             );
         }
@@ -267,7 +268,7 @@ contract Escrow {
      * @param singleDomain Boolean flag indicating if the intent is within a single domain.
      */
     function userCancelIntent(
-        string calldata intentId,
+        uint intentId,
         bool singleDomain
     ) external {
         if (singleDomain) {
@@ -282,7 +283,7 @@ contract Escrow {
             /*ics20TransferBank.sendTransfer{value: msg.value}(
                 ...
             );*/
-            emit CrossChainMsgUser(intentId, addressToString(msg.sender));
+            emit CrossChainMsgUser(intentId, msg.sender);
         }
     }
 
@@ -555,6 +556,10 @@ contract Escrow {
      */
     function changeIcs20TransferBank(address _ics20TransferBank) public onlyOwner {
         ics20TransferBank = IICS20TransferBank(_ics20TransferBank);
+    }
+
+    function getIntentInfo(uint intentId) view public returns(IntentInfo memory) {
+        return intents[intentId];
     }
 
     /**

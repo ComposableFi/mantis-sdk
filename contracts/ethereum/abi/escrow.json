@@ -218,11 +218,6 @@
     "name": "escrowFunds",
     "inputs": [
       {
-        "name": "intentId",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
         "name": "newIntentInfo",
         "type": "tuple",
         "internalType": "struct IntentInfo",
@@ -249,8 +244,8 @@
           },
           {
             "name": "amountOut",
-            "type": "string",
-            "internalType": "string"
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
             "name": "dstUser",
@@ -270,7 +265,13 @@
         ]
       }
     ],
-    "outputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
     "stateMutability": "payable"
   },
   {
@@ -299,6 +300,67 @@
   },
   {
     "type": "function",
+    "name": "getIntentInfo",
+    "inputs": [
+      {
+        "name": "intentId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct IntentInfo",
+        "components": [
+          {
+            "name": "tokenIn",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "amountIn",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "srcUser",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "tokenOut",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "amountOut",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "dstUser",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "winnerSolver",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "timeout",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "ics20TransferBank",
     "inputs": [],
     "outputs": [
@@ -316,8 +378,8 @@
     "inputs": [
       {
         "name": "",
-        "type": "string",
-        "internalType": "string"
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [
@@ -343,8 +405,8 @@
       },
       {
         "name": "amountOut",
-        "type": "string",
-        "internalType": "string"
+        "type": "uint256",
+        "internalType": "uint256"
       },
       {
         "name": "dstUser",
@@ -549,8 +611,8 @@
         "components": [
           {
             "name": "intentId",
-            "type": "string",
-            "internalType": "string"
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
             "name": "tokenOut",
@@ -608,13 +670,13 @@
     "inputs": [
       {
         "name": "intentId",
-        "type": "string",
-        "internalType": "string"
+        "type": "uint256",
+        "internalType": "uint256"
       },
       {
         "name": "amountOut",
-        "type": "string",
-        "internalType": "string"
+        "type": "uint256",
+        "internalType": "uint256"
       },
       {
         "name": "winnerSolver",
@@ -631,8 +693,8 @@
     "inputs": [
       {
         "name": "intentId",
-        "type": "string",
-        "internalType": "string"
+        "type": "uint256",
+        "internalType": "uint256"
       },
       {
         "name": "singleDomain",
@@ -649,9 +711,9 @@
     "inputs": [
       {
         "name": "intentId",
-        "type": "string",
+        "type": "uint256",
         "indexed": false,
-        "internalType": "string"
+        "internalType": "uint256"
       },
       {
         "name": "winnerSolver",
@@ -667,15 +729,15 @@
       },
       {
         "name": "user",
-        "type": "string",
+        "type": "address",
         "indexed": false,
-        "internalType": "string"
+        "internalType": "address"
       },
       {
         "name": "amount",
-        "type": "string",
+        "type": "uint256",
         "indexed": false,
-        "internalType": "string"
+        "internalType": "uint256"
       },
       {
         "name": "solverOut",
@@ -692,15 +754,15 @@
     "inputs": [
       {
         "name": "intentId",
-        "type": "string",
+        "type": "uint256",
         "indexed": false,
-        "internalType": "string"
+        "internalType": "uint256"
       },
       {
         "name": "user",
-        "type": "string",
+        "type": "address",
         "indexed": false,
-        "internalType": "string"
+        "internalType": "address"
       }
     ],
     "anonymous": false
@@ -711,57 +773,9 @@
     "inputs": [
       {
         "name": "intentId",
-        "type": "string",
+        "type": "uint256",
         "indexed": false,
-        "internalType": "string"
-      },
-      {
-        "name": "intent",
-        "type": "tuple",
-        "indexed": false,
-        "internalType": "struct IntentInfo",
-        "components": [
-          {
-            "name": "tokenIn",
-            "type": "address",
-            "internalType": "address"
-          },
-          {
-            "name": "amountIn",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "srcUser",
-            "type": "address",
-            "internalType": "address"
-          },
-          {
-            "name": "tokenOut",
-            "type": "string",
-            "internalType": "string"
-          },
-          {
-            "name": "amountOut",
-            "type": "string",
-            "internalType": "string"
-          },
-          {
-            "name": "dstUser",
-            "type": "string",
-            "internalType": "string"
-          },
-          {
-            "name": "winnerSolver",
-            "type": "string",
-            "internalType": "string"
-          },
-          {
-            "name": "timeout",
-            "type": "uint256",
-            "internalType": "uint256"
-          }
-        ]
+        "internalType": "uint256"
       }
     ],
     "anonymous": false
