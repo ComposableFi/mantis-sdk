@@ -1,4 +1,4 @@
-use clap::{Parser};
+use clap::Parser;
 use dotenv::dotenv;
 use mantis_sdk::cmd::Cli;
 

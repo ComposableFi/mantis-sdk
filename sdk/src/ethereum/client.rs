@@ -68,21 +68,18 @@ impl Chain for EthereumClient {
         intent: UserIntent,
         _contract_address: Self::Address,
     ) -> Result<(), Self::Error> {
-        let intent_id = "123".to_string(); // TODO
         let escrow = EscrowInstance::new(Address::default(), self.rpc_client.clone());
-        let method = escrow.escrowFunds(
-            intent_id,
-            IntentInfo {
-                tokenIn: intent.token_in.parse().map_err(|_| ChainError::ParseAddressError)?,
-                amountIn: intent.amount_in.parse()?,
-                srcUser: intent.user_address.parse().map_err(|_| ChainError::ParseAddressError)?,
-                tokenOut: intent.token_out,
-                amountOut: intent.amount_out,
-                dstUser: "".to_string(),
-                winnerSolver: "".to_string(),
-                timeout: Default::default(),
-            }
-        );
+        let intent_info = IntentInfo {
+            tokenIn: intent.token_in.parse().map_err(|_| ChainError::ParseAddressError)?,
+            amountIn: intent.amount_in.parse()?,
+            srcUser: intent.user_address.parse().map_err(|_| ChainError::ParseAddressError)?,
+            tokenOut: intent.token_out,
+            amountOut: intent.amount_out.parse()?,
+            dstUser: "".to_string(),
+            winnerSolver: "".to_string(),
+            timeout: Default::default(),
+        };
+        let method = escrow.escrowFunds(intent_info);
         let _tx_hash = method.send().await?.with_timeout(Some(Duration::from_secs(30))).watch().await?;
         Ok(())
     }
