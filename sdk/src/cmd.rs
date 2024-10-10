@@ -123,7 +123,9 @@ impl SubmitIntentCmd {
                     "Token Out: {} Amount Out: {}",
                     exchange_args.token_out_name, exchange_args.amount_out
                 );
-                println!("Using keypair: {}", solana_args.mnemonic);
+                if let Some(mnemonic) = solana_args.mnemonic.as_ref() {
+                    println!("Using keypair: {}", mnemonic)
+                };
                 let solana_client = solana_args.build_client().await?;
 
                 let user_intent = UserIntent {

@@ -4,6 +4,7 @@ use solana_sdk::account_info::AccountInfo;
 use solana_sdk::instruction::Instruction;
 
 pub mod cmd;
+mod credentials;
 mod ethereum;
 mod solana;
 

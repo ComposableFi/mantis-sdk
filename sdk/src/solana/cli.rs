@@ -4,16 +4,17 @@ use clap::Args;
 use solana_sdk::signature::Keypair;
 use solana_sdk::signer::SeedDerivable;
 use crate::solana::client::SolanaClient;
+use crate::credentials::Credential;
 
 // TODO: improve keypair handling (load from raw keys, files, interactive, etc.)
 #[derive(Args)]
 pub(crate) struct SolanaArgs {
     /// Mnemonic seed phrase
     #[arg(long, short, env = "SOLANA_MNEMONIC", conflicts_with = "keypair")]
-    pub(crate) mnemonic: String,
+    pub(crate) mnemonic: Option<String>,
     /// Filepath or URL to a keypair
     #[arg(long, short, env = "SOLANA_KEYPAIR", conflicts_with = "mnemonic")]
-    pub(crate) keypair: String,
+    pub(crate) keypair: Option<String>,
     #[arg(long, env = "SOLANA_RPC_URL", requires = "ws_url")]
     pub(crate) rpc_url: Option<String>,
     #[arg(long, env = "SOLANA_WS_URL", requires = "rpc_url")]
@@ -45,11 +46,15 @@ impl SolanaArgs {
     }
 
     pub fn build_signer(&self) -> Result<Keypair, ChainError> {
-        if !self.mnemonic.is_empty() {
-            Keypair::from_seed_phrase_and_passphrase(&self.mnemonic, "").map_err(|e| ChainError::Other(e.to_string()))
-        } else {
-            let file_contents = std::fs::read_to_string(&self.keypair)?;
-            Ok(Keypair::from_base58_string(&file_contents))
+        match Credential::from_options(&self.keypair, &self.mnemonic) {
+            None => Err(ChainError::Other("Exactly one of keypair or mnemonic must be provided".to_string())),
+            Some(Credential::Keypair(path)) => {
+                let file_contents = std::fs::read_to_string(&path)?;
+                Ok(Keypair::from_base58_string(&file_contents))
+            },
+            Some(Credential::Mnemonic(mnemonic)) => {
+                Keypair::from_seed_phrase_and_passphrase(&mnemonic, "").map_err(|e| ChainError::Other(e.to_string()))
+            }
         }
     }
 }
