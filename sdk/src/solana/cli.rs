@@ -1,4 +1,4 @@
-use crate::credentials::Credential;
+use crate::credentials::{self, Credential};
 use crate::solana::client::SolanaClient;
 use crate::solana::{ChainError, Cluster};
 use clap::Args;
@@ -25,7 +25,8 @@ pub(crate) struct SolanaArgs {
 
 impl SolanaArgs {
     pub(crate) async fn build_client(&self) -> Result<SolanaClient, ChainError> {
-        let keypair = Arc::new(self.build_signer()?);
+        let keypair: Arc<Keypair> =
+            Arc::new(credentials::from_options(&self.keypair, &self.mnemonic)?);
 
         let client = if self.rpc_url.is_none() {
             // if RPCs are not provided, use default ones depending on the cluster
@@ -39,20 +40,22 @@ impl SolanaArgs {
         };
         Ok(client)
     }
+}
 
-    pub fn build_signer(&self) -> Result<Keypair, ChainError> {
-        match Credential::from_options(&self.keypair, &self.mnemonic) {
-            None => Err(ChainError::Other(
-                "Exactly one of keypair or mnemonic must be provided".to_string(),
-            )),
-            Some(Credential::Keypair(path)) => {
-                let file_contents = std::fs::read_to_string(&path)?;
-                Ok(Keypair::from_base58_string(&file_contents))
-            }
-            Some(Credential::Mnemonic(mnemonic)) => {
-                Keypair::from_seed_phrase_and_passphrase(&mnemonic, "")
-                    .map_err(|e| ChainError::Other(e.to_string()))
-            }
-        }
+impl Credential for Keypair {
+    type Error = ChainError;
+
+    fn from_base58_file(filename: &str) -> Result<Self, Self::Error> {
+        let file_contents = std::fs::read_to_string(&filename)?;
+        Ok(Keypair::from_base58_string(&file_contents))
+    }
+
+    fn from_mnemonic(mnemonic: &str) -> Result<Self, Self::Error> {
+        Keypair::from_seed_phrase_and_passphrase(&mnemonic, "")
+            .map_err(|e| ChainError::Other(e.to_string()))
+    }
+
+    fn error_from_str(s: &str) -> Self::Error {
+        ChainError::Other(s.to_string())
     }
 }

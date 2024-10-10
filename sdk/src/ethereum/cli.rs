@@ -1,5 +1,5 @@
 use super::{ChainError, Network};
-use crate::credentials::Credential;
+use crate::credentials::{self, Credential};
 use crate::ethereum::client::EthereumClient;
 use alloy::signers::k256::ecdsa;
 use alloy::signers::local::coins_bip39::{English, Mnemonic};
@@ -27,7 +27,8 @@ pub(crate) struct EthereumArgs {
 
 impl EthereumArgs {
     pub(crate) async fn build_client(&self) -> Result<EthereumClient, ChainError> {
-        let keypair = Arc::new(self.build_signer()?);
+        let keypair: Arc<PrivateKeySigner> =
+            Arc::new(credentials::from_options(&self.keypair, &self.mnemonic)?);
 
         let client = if self.rpc_url.is_none() {
             // if RPCs are not provided, use default ones depending on the cluster
@@ -38,20 +39,22 @@ impl EthereumArgs {
         };
         Ok(client)
     }
+}
 
-    pub fn build_signer(&self) -> Result<PrivateKeySigner, ChainError> {
-        match Credential::from_options(&self.keypair, &self.mnemonic) {
-            None => Err(ChainError::Other(
-                "Exactly one of keypair or mnemonic must be provided".to_string(),
-            )),
-            Some(Credential::Keypair(path)) => {
-                PrivateKeySigner::decrypt_keystore(path, "").map_err(Into::into)
-            }
-            Some(Credential::Mnemonic(mnemonic)) => {
-                let x_priv = Mnemonic::<English>::new_from_phrase(mnemonic)?.master_key(None)?;
-                let x: &ecdsa::SigningKey = x_priv.as_ref();
-                Ok(PrivateKeySigner::from_signing_key(x.clone()))
-            }
-        }
+impl Credential for PrivateKeySigner {
+    type Error = ChainError;
+
+    fn from_base58_file(filename: &str) -> Result<Self, Self::Error> {
+        PrivateKeySigner::decrypt_keystore(filename, "").map_err(Into::into)
+    }
+
+    fn from_mnemonic(mnemonic: &str) -> Result<Self, Self::Error> {
+        let x_priv = Mnemonic::<English>::new_from_phrase(mnemonic)?.master_key(None)?;
+        let x: &ecdsa::SigningKey = x_priv.as_ref();
+        Ok(PrivateKeySigner::from_signing_key(x.clone()))
+    }
+
+    fn error_from_str(s: &str) -> Self::Error {
+        ChainError::Other(s.to_string())
     }
 }
