@@ -60,7 +60,8 @@ impl Chain for SolanaClient {
         program_id: Self::Address,
     ) -> Result<(), Self::Error> {
         let auctioneer = self.sender_keypair.clone();
-        let _auctioneer_state = Pubkey::find_program_address(&[b"auctioneer"], &program_id).0;
+        let auctioneer_state = Pubkey::find_program_address(&[b"auctioneer"], &bridge_escrow::ID).0;
+        let auctioneer_pubkey = auctioneer.pubkey();
 
         let client = anchor_client::Client::new_with_options(
             SolanaCluster::Custom(
@@ -70,7 +71,7 @@ impl Chain for SolanaClient {
             auctioneer.clone(),
             CommitmentConfig::processed(),
         );
-
+        
         let program = client.program(program_id).map_err(|e| {
             ChainError::StoreIntentError(format!("Failed to get program instance: {}", e))
         })?;
@@ -90,8 +91,8 @@ impl Chain for SolanaClient {
 
         let new_intent = bridge_escrow::IntentPayload {
             intent_id: intent_id.clone(),
-            user_in: auctioneer.pubkey(), // Must match the ctx.accounts.user key in the contract
-            user_out: auctioneer.pubkey().to_string(),
+            user_in: auctioneer_pubkey, // Must match the ctx.accounts.user key in the contract
+            user_out: auctioneer_pubkey.to_string(),
             token_in: intent.token_in.parse()?,
             amount_in: intent
                 .amount_in
@@ -103,16 +104,15 @@ impl Chain for SolanaClient {
             single_domain: true,
         };
 
-        let auctioneer_state = Pubkey::find_program_address(&[b"auctioneer"], &bridge_escrow::ID).0;
         let user_token_account =
-            get_associated_token_address(&auctioneer.pubkey(), &new_intent.token_in);
+            get_associated_token_address(&auctioneer_pubkey, &new_intent.token_in);
         let escrow_token_account =
             get_associated_token_address(&auctioneer_state, &new_intent.token_in);
 
-        let result = program
+        let request = program
             .request()
             .accounts(bridge_escrow::accounts::EscrowAndStoreIntent {
-                user: auctioneer.pubkey(),
+                user: auctioneer_pubkey,
                 user_token_account,
                 auctioneer_state,
                 token_mint: new_intent.token_in,
@@ -127,11 +127,13 @@ impl Chain for SolanaClient {
                 new_intent,
             })
             .payer(auctioneer.clone())
-            .signer(auctioneer.as_ref())
+            .signer(auctioneer.as_ref());
+
+        let result = request
             .send_with_spinner_and_config(RpcSendTransactionConfig {
                 skip_preflight: true,
                 ..Default::default()
-            });
+            }).await;
 
         result
             .map_err(|e| ChainError::StoreIntentError(format!("Failed to send transaction: {}", e)))
