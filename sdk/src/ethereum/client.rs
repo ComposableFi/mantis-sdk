@@ -1,16 +1,16 @@
+use crate::ethereum::client::Escrow::{EscrowInstance, IntentInfo};
 use crate::ethereum::{ChainError, Network};
 use crate::Chain;
 use alloy::primitives::{Address, U256};
-use alloy::signers::local::PrivateKeySigner;
+use alloy::providers::{ProviderBuilder, ReqwestProvider};
 use alloy::rpc::types::Transaction;
+use alloy::signers::local::PrivateKeySigner;
+use alloy::sol;
 use async_trait::async_trait;
 use mantis_common::UserIntent;
+use reqwest::Url;
 use std::sync::Arc;
 use std::time::Duration;
-use alloy::providers::{ProviderBuilder, ReqwestProvider};
-use alloy::sol;
-use reqwest::Url;
-use crate::ethereum::client::Escrow::{EscrowInstance, IntentInfo};
 
 sol!(
     #[sol(rpc)]
@@ -70,9 +70,15 @@ impl Chain for EthereumClient {
     ) -> Result<(), Self::Error> {
         let escrow = EscrowInstance::new(Address::default(), self.rpc_client.clone());
         let intent_info = IntentInfo {
-            tokenIn: intent.token_in.parse().map_err(|_| ChainError::ParseAddressError)?,
+            tokenIn: intent
+                .token_in
+                .parse()
+                .map_err(|_| ChainError::ParseAddressError)?,
             amountIn: intent.amount_in.parse()?,
-            srcUser: intent.user_address.parse().map_err(|_| ChainError::ParseAddressError)?,
+            srcUser: intent
+                .user_address
+                .parse()
+                .map_err(|_| ChainError::ParseAddressError)?,
             tokenOut: intent.token_out,
             amountOut: intent.amount_out.parse()?,
             dstUser: "".to_string(),
@@ -80,7 +86,12 @@ impl Chain for EthereumClient {
             timeout: Default::default(),
         };
         let method = escrow.escrowFunds(intent_info);
-        let _tx_hash = method.send().await?.with_timeout(Some(Duration::from_secs(30))).watch().await?;
+        let _tx_hash = method
+            .send()
+            .await?
+            .with_timeout(Some(Duration::from_secs(30)))
+            .watch()
+            .await?;
         Ok(())
     }
 

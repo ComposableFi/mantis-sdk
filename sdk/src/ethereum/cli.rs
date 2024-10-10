@@ -1,12 +1,12 @@
-use std::sync::Arc;
+use super::{ChainError, Network};
+use crate::credentials::Credential;
+use crate::ethereum::client::EthereumClient;
 use alloy::signers::k256::ecdsa;
 use alloy::signers::local::coins_bip39::{English, Mnemonic};
 use alloy::signers::local::PrivateKeySigner;
-use super::{ChainError, Network};
 use clap::Args;
 use reqwest::Url;
-use crate::ethereum::client::EthereumClient;
-use crate::credentials::Credential;
+use std::sync::Arc;
 
 // TODO: improve keypair handling (load from raw keys, files, interactive, etc.)
 #[derive(Args)]
@@ -33,25 +33,20 @@ impl EthereumArgs {
             // if RPCs are not provided, use default ones depending on the cluster
             EthereumClient::new(self.network, keypair)
         } else {
-            let (rpc_url, ws_url) = (
-                self.rpc_url.clone().unwrap(),
-                self.ws_url.clone().unwrap(),
-            );
-            EthereumClient::new_with_url(
-                self.network,
-                keypair,
-                rpc_url,
-                ws_url,
-            )
+            let (rpc_url, ws_url) = (self.rpc_url.clone().unwrap(), self.ws_url.clone().unwrap());
+            EthereumClient::new_with_url(self.network, keypair, rpc_url, ws_url)
         };
         Ok(client)
     }
 
     pub fn build_signer(&self) -> Result<PrivateKeySigner, ChainError> {
         match Credential::from_options(&self.keypair, &self.mnemonic) {
-            None => Err(ChainError::Other("Exactly one of keypair or mnemonic must be provided".to_string())),
-            Some(Credential::Keypair(path)) =>
-                PrivateKeySigner::decrypt_keystore(path, "").map_err(Into::into),
+            None => Err(ChainError::Other(
+                "Exactly one of keypair or mnemonic must be provided".to_string(),
+            )),
+            Some(Credential::Keypair(path)) => {
+                PrivateKeySigner::decrypt_keystore(path, "").map_err(Into::into)
+            }
             Some(Credential::Mnemonic(mnemonic)) => {
                 let x_priv = Mnemonic::<English>::new_from_phrase(mnemonic)?.master_key(None)?;
                 let x: &ecdsa::SigningKey = x_priv.as_ref();

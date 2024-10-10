@@ -5,11 +5,11 @@ use anchor_lang::prelude::Pubkey;
 use anchor_spl::associated_token::get_associated_token_address;
 use async_trait::async_trait;
 use mantis_common::UserIntent;
+use rand::{distributions::Alphanumeric, Rng};
 use solana_client::rpc_client::RpcClient;
 use solana_client::rpc_config::RpcSendTransactionConfig;
 use solana_sdk::commitment_config::CommitmentConfig;
 use solana_sdk::signature::{Keypair, Signer};
-use rand::{distributions::Alphanumeric, Rng};
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -80,7 +80,8 @@ impl Chain for SolanaClient {
             .take(6)
             .map(char::from)
             .collect();
-        let intent_state = Pubkey::find_program_address(&[b"intent", intent_id.as_bytes()], &program.id()).0;
+        let intent_state =
+            Pubkey::find_program_address(&[b"intent", intent_id.as_bytes()], &program.id()).0;
 
         let current_timestamp = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -92,7 +93,9 @@ impl Chain for SolanaClient {
             user_in: auctioneer.pubkey(), // Must match the ctx.accounts.user key in the contract
             user_out: auctioneer.pubkey().to_string(),
             token_in: intent.token_in.parse()?,
-            amount_in: intent.amount_in.parse()
+            amount_in: intent
+                .amount_in
+                .parse()
                 .map_err(|e: std::num::ParseIntError| ChainError::Other(e.to_string()))?,
             token_out: intent.token_out.clone(),
             amount_out: intent.amount_out.to_string(), // Amount out as a string
@@ -101,7 +104,7 @@ impl Chain for SolanaClient {
         };
 
         let auctioneer_state = Pubkey::find_program_address(&[b"auctioneer"], &bridge_escrow::ID).0;
-        let user_token_account = 
+        let user_token_account =
             get_associated_token_address(&auctioneer.pubkey(), &new_intent.token_in);
         let escrow_token_account =
             get_associated_token_address(&auctioneer_state, &new_intent.token_in);
