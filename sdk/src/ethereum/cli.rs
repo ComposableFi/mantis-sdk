@@ -6,16 +6,17 @@ use super::{ChainError, Network};
 use clap::Args;
 use reqwest::Url;
 use crate::ethereum::client::EthereumClient;
+use crate::credentials::Credential;
 
 // TODO: improve keypair handling (load from raw keys, files, interactive, etc.)
 #[derive(Args)]
 pub(crate) struct EthereumArgs {
     /// Mnemonic seed phrase
     #[arg(long, short, env = "ETHEREUM_MNEMONIC", conflicts_with = "keypair")]
-    pub(crate) mnemonic: String,
+    pub(crate) mnemonic: Option<String>,
     /// Filepath or URL to a keypair
     #[arg(long, short, env = "ETHEREUM_KEYPAIR", conflicts_with = "mnemonic")]
-    pub(crate) keypair: String,
+    pub(crate) keypair: Option<String>,
     #[arg(long, env = "ETHEREUM_RPC_URL", requires = "ws_url")]
     pub(crate) rpc_url: Option<Url>,
     #[arg(long, env = "ETHEREUM_WS_URL", requires = "rpc_url")]
@@ -47,12 +48,15 @@ impl EthereumArgs {
     }
 
     pub fn build_signer(&self) -> Result<PrivateKeySigner, ChainError> {
-        if !self.mnemonic.is_empty() {
-            let x_priv = Mnemonic::<English>::new_from_phrase(&self.mnemonic)?.master_key(None)?;
-            let x: &ecdsa::SigningKey = x_priv.as_ref();
-            Ok(PrivateKeySigner::from_signing_key(x.clone()))
-        } else {
-            PrivateKeySigner::decrypt_keystore(&self.keypair, "").map_err(Into::into)
+        match Credential::from_options(&self.keypair, &self.mnemonic) {
+            None => Err(ChainError::Other("Exactly one of keypair or mnemonic must be provided".to_string())),
+            Some(Credential::Keypair(path)) =>
+                PrivateKeySigner::decrypt_keystore(path, "").map_err(Into::into),
+            Some(Credential::Mnemonic(mnemonic)) => {
+                let x_priv = Mnemonic::<English>::new_from_phrase(mnemonic)?.master_key(None)?;
+                let x: &ecdsa::SigningKey = x_priv.as_ref();
+                Ok(PrivateKeySigner::from_signing_key(x.clone()))
+            }
         }
     }
 }
