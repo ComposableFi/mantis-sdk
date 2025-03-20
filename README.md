@@ -9,3 +9,7 @@
 - `lib/` - Rust SDK library for interacting with the Mantis smart contracts
 
 - `src/` - TypeScript SDK library for interacting with the Mantis smart contracts
+
+- `src/solana/` - Auto-generated TypeScript types from Anchor
+
+- `src/ethereum/` - Auto-generated TypeScript types from Typechain
