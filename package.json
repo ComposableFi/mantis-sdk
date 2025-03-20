@@ -3,13 +3,33 @@
   "version": "0.1.0",
   "description": "Mantis SDK",
   "main": "build/main.js",
+  "module": "build/main.mjs",
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "start": "node ./build/main.js",
     "clean": "trash -f build node_modules"
   },
-  "dependencies": {},
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ComposableFi/mantis-sdk.git"
+  },
+  "keywords": [
+    "Mantis",
+    "DeFi",
+    "SDK",
+    "Solana",
+    "Ethereum",
+    "Anchor",
+    "Blockchain"
+  ],
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.31.0"
+  },
   "devDependencies": {
     "@types/node": "latest",
     "typescript": "latest"

@@ -5,10 +5,12 @@ edition = "2021"
 
 [lib]
 path = "lib/lib.rs"
-name = "mantis-sdk"
+name = "mantis_sdk"
 
 [[bin]]
 path = "cli/main.rs"
 name = "mantis-cli"
 
 [dependencies]
+alloy = { version = "0.12.6", features = ["full"] }
+anchor-client = { version = "0.31.0", features = ["async"] }
