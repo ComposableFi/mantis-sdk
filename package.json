@@ -1,0 +1,17 @@
+{
+  "name": "mantis-sdk",
+  "version": "0.1.0",
+  "description": "Mantis SDK",
+  "main": "build/main.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node ./build/main.js",
+    "clean": "trash -f build node_modules"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "latest",
+    "typescript": "latest"
+  }
+}
