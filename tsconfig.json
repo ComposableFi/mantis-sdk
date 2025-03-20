@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "NodeNext",
+    "module": "ESNext",
     "moduleResolution": "NodeNext",
     "lib": [
       "ES2023"
@@ -10,9 +10,11 @@
     "types": [
       "node"
     ],
-    "outDir": "./build/",
+    "outDir": "./dist/",
+    "allowImportingTsExtensions": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
     "strict": true,
     "skipLibCheck": true
   },
@@ -22,7 +24,7 @@
   "exclude": [
     "node_modules",
     "**/*.spec.ts",
+    "**/*.test.ts",
     "dist",
-    "build"
   ]
 }

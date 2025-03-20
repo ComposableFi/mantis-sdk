@@ -2,12 +2,16 @@
   "name": "mantis-sdk",
   "version": "0.1.0",
   "description": "Mantis SDK",
-  "main": "build/main.js",
-  "module": "build/main.mjs",
+  "main": "dist/lib.js",
+  "module": "dist/lib.mjs",
+  "types": "dist/lib.d.ts",
   "type": "module",
+  "license": "MIT",
   "scripts": {
     "build": "tsc",
-    "clean": "trash -f build node_modules"
+    "typechain": "typechain --target=ethers-v6 --out-dir=src/ethereum ./abis/escrow.json",
+    "lint": "eslint src --ext .ts",
+    "clean": "rm -r dist node_modules"
   },
   "files": [
     "src",
@@ -28,10 +32,15 @@
     "Blockchain"
   ],
   "dependencies": {
+    "ethers": "^6.13.5",
     "@coral-xyz/anchor": "^0.31.0"
   },
   "devDependencies": {
-    "@types/node": "latest",
-    "typescript": "latest"
+    "@typechain/ethers-v6": "^0.5.1",
+    "@typescript-eslint/eslint-plugin": "^6.7.2",
+    "@typescript-eslint/parser": "^6.7.2",
+    "eslint": "^8.50.0",
+    "@types/node": "^22.13.10",
+    "typescript": "^5.8.2"
   }
 }

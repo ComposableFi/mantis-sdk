@@ -3625,6 +3625,8 @@ version = "0.0.0"
 dependencies = [
  "alloy",
  "anchor-client",
+ "anchor-lang",
+ "anyhow",
 ]
 
 [[package]]

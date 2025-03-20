@@ -1,2 +1,2 @@
-mod ethereum;
-mod solana;
+pub mod ethereum;
+pub mod solana;

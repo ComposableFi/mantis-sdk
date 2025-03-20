@@ -14,3 +14,5 @@ name = "mantis-cli"
 [dependencies]
 alloy = { version = "0.12.6", features = ["full"] }
 anchor-client = { version = "0.31.0", features = ["async"] }
+anchor-lang = "0.31.0"
+anyhow = "1.0.93"
