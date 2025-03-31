@@ -1,13 +1,7 @@
 [
   {
     "type": "constructor",
-    "inputs": [
-      {
-        "name": "_intentChainId",
-        "type": "uint8",
-        "internalType": "uint8"
-      }
-    ],
+    "inputs": [],
     "stateMutability": "nonpayable"
   },
   {
@@ -27,6 +21,19 @@
         "name": "",
         "type": "address",
         "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "INTENT_CHAIN_ID",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint8",
+        "internalType": "uint8"
       }
     ],
     "stateMutability": "view"
@@ -63,8 +70,8 @@
     "inputs": [
       {
         "name": "intentId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "uint64",
+        "internalType": "uint64"
       }
     ],
     "outputs": [],
@@ -120,8 +127,8 @@
         "components": [
           {
             "name": "intentId",
-            "type": "uint256",
-            "internalType": "uint256"
+            "type": "uint64",
+            "internalType": "uint64"
           },
           {
             "name": "srcUser",
@@ -171,13 +178,7 @@
         ]
       }
     ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
+    "outputs": [],
     "stateMutability": "payable"
   },
   {
@@ -215,8 +216,8 @@
     "inputs": [
       {
         "name": "intentId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "uint64",
+        "internalType": "uint64"
       },
       {
         "name": "solver",
@@ -234,25 +235,12 @@
   },
   {
     "type": "function",
-    "name": "intentChainId",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint8",
-        "internalType": "uint8"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "intents",
     "inputs": [
       {
         "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "uint64",
+        "internalType": "uint64"
       }
     ],
     "outputs": [
@@ -366,8 +354,8 @@
     "inputs": [
       {
         "name": "intentId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "uint64",
+        "internalType": "uint64"
       }
     ],
     "outputs": [],
@@ -379,8 +367,8 @@
     "inputs": [
       {
         "name": "intentId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "uint64",
+        "internalType": "uint64"
       },
       {
         "name": "srcChainId",
@@ -412,8 +400,8 @@
     "inputs": [
       {
         "name": "intentId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "uint64",
+        "internalType": "uint64"
       },
       {
         "name": "srcChainId",
@@ -445,9 +433,9 @@
     "inputs": [
       {
         "name": "intentId",
-        "type": "uint256",
+        "type": "uint64",
         "indexed": true,
-        "internalType": "uint256"
+        "internalType": "uint64"
       }
     ],
     "anonymous": false
@@ -458,9 +446,9 @@
     "inputs": [
       {
         "name": "intentId",
-        "type": "uint256",
+        "type": "uint64",
         "indexed": true,
-        "internalType": "uint256"
+        "internalType": "uint64"
       }
     ],
     "anonymous": false
@@ -471,9 +459,9 @@
     "inputs": [
       {
         "name": "intentId",
-        "type": "uint256",
+        "type": "uint64",
         "indexed": true,
-        "internalType": "uint256"
+        "internalType": "uint64"
       },
       {
         "name": "solver",
@@ -496,9 +484,9 @@
     "inputs": [
       {
         "name": "intentId",
-        "type": "uint256",
+        "type": "uint64",
         "indexed": true,
-        "internalType": "uint256"
+        "internalType": "uint64"
       },
       {
         "name": "solver",
@@ -545,9 +533,9 @@
     "inputs": [
       {
         "name": "intentId",
-        "type": "uint256",
+        "type": "uint64",
         "indexed": true,
-        "internalType": "uint256"
+        "internalType": "uint64"
       },
       {
         "name": "srcChainId",
@@ -582,9 +570,9 @@
     "inputs": [
       {
         "name": "intentId",
-        "type": "uint256",
+        "type": "uint64",
         "indexed": true,
-        "internalType": "uint256"
+        "internalType": "uint64"
       },
       {
         "name": "solver",

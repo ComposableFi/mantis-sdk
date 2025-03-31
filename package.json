@@ -32,15 +32,16 @@
     "Blockchain"
   ],
   "dependencies": {
-    "ethers": "^6.13.5",
-    "@coral-xyz/anchor": "^0.31.0"
+    "@coral-xyz/anchor": "^0.31.0",
+    "viem": "^2.24.2",
+    "wagmi": "^2.14.15"
   },
   "devDependencies": {
-    "@typechain/ethers-v6": "^0.5.1",
+    "@types/node": "^22.13.10",
     "@typescript-eslint/eslint-plugin": "^6.7.2",
     "@typescript-eslint/parser": "^6.7.2",
+    "@wagmi/cli": "^2.2.1",
     "eslint": "^8.50.0",
-    "@types/node": "^22.13.10",
     "typescript": "^5.8.2"
   }
 }

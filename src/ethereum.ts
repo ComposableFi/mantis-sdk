@@ -1,3 +1,2 @@
-import { ethers } from "ethers";
-import type { Escrow } from "./ethereum/Escrow.ts";
-import escrowABI from "../abis/escrow.json";
+import { Abi } from "viem";
+import type { escrowAbi } from "./ethereum/escrow.ts";
