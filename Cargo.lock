@@ -1405,7 +1405,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "auctioneer-sdk"
+name = "auction-sdk"
 version = "0.0.0"
 
 [[package]]
@@ -4454,7 +4454,7 @@ dependencies = [
 
 [[package]]
 name = "mantis-cli"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "alloy",
  "anchor-client",
@@ -4462,6 +4462,7 @@ dependencies = [
  "anchor-spl",
  "anyhow",
  "base64 0.22.1",
+ "mantis-sdk",
  "num 0.4.3",
  "rand 0.8.5",
  "solana-client",
@@ -4480,7 +4481,7 @@ dependencies = [
 
 [[package]]
 name = "mantis-sdk"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "alloy",
  "anchor-client",
@@ -4488,6 +4489,7 @@ dependencies = [
  "anchor-spl",
  "anyhow",
  "base64 0.22.1",
+ "chrono",
  "num 0.4.3",
  "rand 0.8.5",
  "solana-client",

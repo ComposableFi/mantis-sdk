@@ -1,11 +1,11 @@
 [package]
-name = "mantis-cli"
-version = "0.0.0"
 edition = "2021"
+name = "mantis-cli"
+version = "0.1.0"
 
 [[bin]]
-path = "src/main.rs"
 name = "mantis-cli"
+path = "src/main.rs"
 
 [dependencies]
 anchor-client = { workspace = true }
@@ -29,3 +29,5 @@ base64 = { workspace = true }
 num = { workspace = true }
 rand = { workspace = true }
 tokio = { workspace = true }
+
+mantis-sdk = { workspace = true }

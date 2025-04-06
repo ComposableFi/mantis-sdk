@@ -1,11 +1,11 @@
 [package]
-name = "mantis-sdk"
-version = "0.0.0"
 edition = "2021"
+name = "mantis-sdk"
+version = "0.1.0"
 
 [lib]
-path = "src/lib.rs"
 name = "mantis_sdk"
+path = "src/lib.rs"
 
 [dependencies]
 anchor-client = { workspace = true }
@@ -26,6 +26,7 @@ spl-token-2022 = { workspace = true }
 alloy = { workspace = true }
 anyhow = { workspace = true }
 base64 = { workspace = true }
+chrono = { workspace = true }
 num = { workspace = true }
 rand = { workspace = true }
 tokio = { workspace = true }

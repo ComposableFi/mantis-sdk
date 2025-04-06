@@ -1,10 +1,10 @@
 [package]
-name = "auctioneer-sdk"
-version = "0.0.0"
 edition = "2021"
+name = "auction-sdk"
+version = "0.0.0"
 
 [lib]
+name = "auction_sdk"
 path = "src/lib.rs"
-name = "auctioneer_sdk"
 
 [dependencies]

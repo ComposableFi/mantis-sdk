@@ -43,9 +43,9 @@ pub const SOLANA_RPC_URL_WS: &str = "wss://api.mainnet-beta.solana.com";
 pub async fn escrow_funds(
     signer: Arc<Keypair>,
     token_in: Pubkey,
-    token_in_amount: BigUint,
+    amount_in: BigUint,
     token_out: String,
-    token_out_amount: BigUint,
+    amount_out: BigUint,
     dst_user: String,
     dst_chain_id: u8,
     spinner: bool,
@@ -62,7 +62,7 @@ pub async fn escrow_funds(
     let payer = signer.clone();
     let src_user = payer.pubkey();
     let timestamp = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
-    let timeout = timestamp + 300;
+    let timeout = timestamp + 360;
     let intent_id = random_intent_id();
 
     let token_in_mint = if token_in == Pubkey::default() {
@@ -104,9 +104,9 @@ pub async fn escrow_funds(
         src_user,
         dst_user,
         token_in,
-        amount_in: token_in_amount.try_into()?,
+        amount_in: amount_in.try_into()?,
         token_out,
-        amount_out: token_out_amount.to_str_radix(10),
+        amount_out: amount_out.to_str_radix(10),
         timeout,
         ai_agent: false,
         dst_chain_id,
