@@ -20,6 +20,6 @@ A Rust SDK library to interact with the Mantis smart contracts.
 
 A Rust SDK library for solvers to integrate with the auction process.
 
-# Mantis SDK TS 🟦
+# Mantis SDK 🔷
 
 A TypeScript SDK library to interact with the Mantis smart contracts.
