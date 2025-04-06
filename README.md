@@ -1,15 +1,15 @@
-# Mantis SDK
+# Mantis SDK 🦀
 
-- `idls/` - Contains Anchor IDL files for Solana programs
+A Rust SDK library to interact with the Mantis smart contracts.
 
-- `abis/` - Contains Solidity ABI files for Ethereum smart contracts
+# Mantis CLI 🦀
 
-- `cli/` - CLI utility for interacting with the Mantis smart contracts
+A CLI utility to interact with the Mantis smart contracts.
 
-- `lib/` - Rust SDK library for interacting with the Mantis smart contracts
+# Auctioneer SDK 🦀
 
-- `src/` - TypeScript SDK library for interacting with the Mantis smart contracts
+A Rust SDK library for solvers to integrate with the auction process.
 
-- `src/solana/` - Auto-generated TypeScript types from Anchor
+# Mantis SDK 🟦
 
-- `src/ethereum/` - Auto-generated TypeScript types from Typechain
+A TypeScript SDK library to interact with the Mantis smart contracts.
