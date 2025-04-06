@@ -9,7 +9,7 @@ export default defineConfig({
     {
       name: 'Escrow',
       abi: EscrowAbi as Abi,
-      //address: '0xaf55771e9cd32f93532670ef358c8703d598505c'
+      address: '0xaf55771e9cd32f93532670ef358c8703d598505c'
     }
   ],
   plugins: [],

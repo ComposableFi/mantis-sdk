@@ -1,5 +1,5 @@
 {
-  "address": "54TyyV9KbeYamLmFFppLE1qZsi2rZgncrtRrU5y7DiTM",
+  "address": "7D41jAGYFTeJhd5bFzJgY4TwrWL7zr7oC454e5yqjw4Q",
   "metadata": {
     "name": "escrow",
     "version": "0.1.0",
@@ -45,6 +45,37 @@
           }
         },
         {
+          "name": "escrow_sol_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  97,
+                  109,
+                  112,
+                  111,
+                  114,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "intent_pda",
           "writable": true,
           "pda": {
@@ -80,13 +111,7 @@
                 "value": [
                   102,
                   101,
-                  101,
-                  95,
-                  118,
-                  97,
-                  117,
-                  108,
-                  116
+                  101
                 ]
               },
               {
@@ -106,12 +131,18 @@
                 "value": [
                   102,
                   101,
-                  101,
-                  95,
-                  118,
-                  97,
-                  117,
+                  101
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
                   108,
+                  97,
+                  109,
+                  112,
+                  111,
+                  114,
                   116
                 ]
               }
@@ -154,7 +185,7 @@
       "args": [
         {
           "name": "intent_id",
-          "type": "string"
+          "type": "u64"
         }
       ]
     },
@@ -211,13 +242,7 @@
                 "value": [
                   102,
                   101,
-                  101,
-                  95,
-                  118,
-                  97,
-                  117,
-                  108,
-                  116
+                  101
                 ]
               },
               {
@@ -237,12 +262,18 @@
                 "value": [
                   102,
                   101,
-                  101,
-                  95,
-                  118,
-                  97,
-                  117,
+                  101
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
                   108,
+                  97,
+                  109,
+                  112,
+                  111,
+                  114,
                   116
                 ]
               }
@@ -321,6 +352,37 @@
                   114,
                   111,
                   119
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrow_sol_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  97,
+                  109,
+                  112,
+                  111,
+                  114,
+                  116
                 ]
               }
             ]
@@ -433,13 +495,7 @@
                 "value": [
                   102,
                   101,
-                  101,
-                  95,
-                  118,
-                  97,
-                  117,
-                  108,
-                  116
+                  101
                 ]
               },
               {
@@ -459,12 +515,18 @@
                 "value": [
                   102,
                   101,
-                  101,
-                  95,
-                  118,
-                  97,
-                  117,
+                  101
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
                   108,
+                  97,
+                  109,
+                  112,
+                  111,
+                  114,
                   116
                 ]
               }
@@ -495,7 +557,7 @@
           }
         },
         {
-          "name": "fees_pda",
+          "name": "fee_pda",
           "writable": true,
           "pda": {
             "seeds": [
@@ -504,8 +566,7 @@
                 "value": [
                   102,
                   101,
-                  101,
-                  115
+                  101
                 ]
               }
             ]
@@ -610,7 +671,7 @@
       "args": [
         {
           "name": "intent_id",
-          "type": "string"
+          "type": "u64"
         },
         {
           "name": "solver",
@@ -660,7 +721,7 @@
           }
         },
         {
-          "name": "fees_pda",
+          "name": "fee_pda",
           "writable": true,
           "pda": {
             "seeds": [
@@ -669,8 +730,38 @@
                 "value": [
                   102,
                   101,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrow_sol_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
                   101,
-                  115
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  97,
+                  109,
+                  112,
+                  111,
+                  114,
+                  116
                 ]
               }
             ]
@@ -686,17 +777,27 @@
                 "value": [
                   102,
                   101,
-                  101,
-                  95,
-                  118,
-                  97,
-                  117,
+                  101
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
                   108,
+                  97,
+                  109,
+                  112,
+                  111,
+                  114,
                   116
                 ]
               }
             ]
           }
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
         },
         {
           "name": "system_program",
@@ -745,7 +846,7 @@
           }
         },
         {
-          "name": "fees_pda",
+          "name": "fee_pda",
           "writable": true,
           "pda": {
             "seeds": [
@@ -754,8 +855,7 @@
                 "value": [
                   102,
                   101,
-                  101,
-                  115
+                  101
                 ]
               }
             ]
@@ -842,6 +942,37 @@
           }
         },
         {
+          "name": "escrow_sol_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  97,
+                  109,
+                  112,
+                  111,
+                  114,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "token_in_mint"
         },
         {
@@ -868,26 +999,8 @@
           "writable": true
         },
         {
-          "name": "fee_sol_pda",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  102,
-                  101,
-                  101,
-                  95,
-                  118,
-                  97,
-                  117,
-                  108,
-                  116
-                ]
-              }
-            ]
-          }
+          "name": "src_user",
+          "writable": true
         },
         {
           "name": "token_program",
@@ -909,7 +1022,7 @@
       "args": [
         {
           "name": "intent_id",
-          "type": "string"
+          "type": "u64"
         }
       ]
     },
@@ -985,7 +1098,7 @@
       "args": [
         {
           "name": "intent_id",
-          "type": "string"
+          "type": "u64"
         },
         {
           "name": "src_chain_id",
@@ -1046,36 +1159,30 @@
           }
         },
         {
-          "name": "token_in_mint"
-        },
-        {
-          "name": "escrow_token_in_ata",
-          "writable": true
-        },
-        {
-          "name": "solver_token_in_ata",
-          "writable": true
-        },
-        {
-          "name": "solver",
-          "writable": true
-        },
-        {
-          "name": "fee_sol_pda",
+          "name": "escrow_sol_pda",
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "const",
                 "value": [
-                  102,
                   101,
-                  101,
-                  95,
-                  118,
-                  97,
-                  117,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
                   108,
+                  97,
+                  109,
+                  112,
+                  111,
+                  114,
                   116
                 ]
               }
@@ -1106,6 +1213,25 @@
           }
         },
         {
+          "name": "token_in_mint"
+        },
+        {
+          "name": "escrow_token_in_ata",
+          "writable": true
+        },
+        {
+          "name": "solver_token_in_ata",
+          "writable": true
+        },
+        {
+          "name": "solver",
+          "writable": true
+        },
+        {
+          "name": "src_user",
+          "writable": true
+        },
+        {
           "name": "token_program",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
@@ -1125,7 +1251,7 @@
       "args": [
         {
           "name": "intent_id",
-          "type": "string"
+          "type": "u64"
         },
         {
           "name": "src_chain_id",
@@ -1148,19 +1274,6 @@
   ],
   "accounts": [
     {
-      "name": "EmptyAccount",
-      "discriminator": [
-        174,
-        156,
-        186,
-        113,
-        230,
-        158,
-        33,
-        215
-      ]
-    },
-    {
       "name": "EscrowAccount",
       "discriminator": [
         36,
@@ -1174,16 +1287,16 @@
       ]
     },
     {
-      "name": "FeesAccount",
+      "name": "FeeAccount",
       "discriminator": [
-        57,
-        211,
-        239,
-        69,
-        152,
-        254,
-        46,
-        122
+        137,
+        191,
+        201,
+        34,
+        168,
+        222,
+        43,
+        138
       ]
     },
     {
@@ -1346,23 +1459,43 @@
     },
     {
       "code": 6010,
+      "name": "InvalidIntentId",
+      "msg": "Intent ID must be a random 12 digit number"
+    },
+    {
+      "code": 6011,
       "name": "InvalidTokenOut",
       "msg": "Invalid token_out"
     },
     {
-      "code": 6011,
+      "code": 6012,
       "name": "InvalidAmountOut",
       "msg": "Invalid amount_out"
     },
     {
-      "code": 6012,
+      "code": 6013,
+      "name": "InvalidAmountIn",
+      "msg": "Invalid amount_in"
+    },
+    {
+      "code": 6014,
+      "name": "InvalidDstUser",
+      "msg": "Invalid dst_user address"
+    },
+    {
+      "code": 6015,
       "name": "TokenInNotAtaMint",
       "msg": "Intent token_in does not match the ATA mint"
     },
     {
-      "code": 6013,
+      "code": 6016,
       "name": "SrcUserNotAtaOwner",
       "msg": "Intent src_user does not match the ATA owner"
+    },
+    {
+      "code": 6017,
+      "name": "CouldNotCloseAccount",
+      "msg": "Could not close an account"
     }
   ],
   "types": [
@@ -1373,7 +1506,7 @@
         "fields": [
           {
             "name": "intent_id",
-            "type": "string"
+            "type": "u64"
           }
         ]
       }
@@ -1399,13 +1532,6 @@
       }
     },
     {
-      "name": "EmptyAccount",
-      "type": {
-        "kind": "struct",
-        "fields": []
-      }
-    },
-    {
       "name": "EscrowAccount",
       "type": {
         "kind": "struct",
@@ -1424,13 +1550,13 @@
         "fields": [
           {
             "name": "intent_id",
-            "type": "string"
+            "type": "u64"
           }
         ]
       }
     },
     {
-      "name": "FeesAccount",
+      "name": "FeeAccount",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1460,7 +1586,7 @@
         "fields": [
           {
             "name": "intent_id",
-            "type": "string"
+            "type": "u64"
           },
           {
             "name": "solver",
@@ -1480,7 +1606,7 @@
         "fields": [
           {
             "name": "intent_id",
-            "type": "string"
+            "type": "u64"
           },
           {
             "name": "src_user",
@@ -1544,7 +1670,7 @@
         "fields": [
           {
             "name": "intent_id",
-            "type": "string"
+            "type": "u64"
           },
           {
             "name": "src_user",
@@ -1592,7 +1718,7 @@
         "fields": [
           {
             "name": "intent_id",
-            "type": "string"
+            "type": "u64"
           },
           {
             "name": "solver",
@@ -1628,7 +1754,11 @@
         "fields": [
           {
             "name": "intent_id",
-            "type": "string"
+            "type": "u64"
+          },
+          {
+            "name": "src_chain_id",
+            "type": "u8"
           },
           {
             "name": "dst_user",
@@ -1652,7 +1782,7 @@
         "fields": [
           {
             "name": "intent_id",
-            "type": "string"
+            "type": "u64"
           },
           {
             "name": "solver",

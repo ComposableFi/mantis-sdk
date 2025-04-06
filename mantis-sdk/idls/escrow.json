@@ -1,0 +1,1803 @@
+{
+  "address": "7D41jAGYFTeJhd5bFzJgY4TwrWL7zr7oC454e5yqjw4Q",
+  "metadata": {
+    "name": "escrow",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "cancel_intent",
+      "discriminator": [
+        67,
+        73,
+        238,
+        244,
+        208,
+        89,
+        225,
+        59
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "escrow_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrow_sol_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  97,
+                  109,
+                  112,
+                  111,
+                  114,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "intent_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  116,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "intent_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_in_mint"
+        },
+        {
+          "name": "fee_token_in_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_in_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_sol_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  97,
+                  109,
+                  112,
+                  111,
+                  114,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "user_token_in_ata",
+          "writable": true
+        },
+        {
+          "name": "src_user",
+          "writable": true
+        },
+        {
+          "name": "escrow_token_in_ata",
+          "writable": true
+        },
+        {
+          "name": "clock",
+          "address": "SysvarC1ock11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "token_2022_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "intent_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "collect_fees",
+      "discriminator": [
+        164,
+        152,
+        207,
+        99,
+        30,
+        186,
+        19,
+        182
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "escrow_pda"
+          ]
+        },
+        {
+          "name": "token_in_mint"
+        },
+        {
+          "name": "escrow_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_token_in_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_in_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_sol_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  97,
+                  109,
+                  112,
+                  111,
+                  114,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrow_token_in_ata",
+          "writable": true
+        },
+        {
+          "name": "fee_recipient_ata",
+          "writable": true
+        },
+        {
+          "name": "fee_recipient",
+          "writable": true
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "token_2022_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "native_sol",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "escrow_funds",
+      "discriminator": [
+        177,
+        157,
+        138,
+        132,
+        217,
+        63,
+        234,
+        128
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "escrow_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrow_sol_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  97,
+                  109,
+                  112,
+                  111,
+                  114,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_in_mint"
+        },
+        {
+          "name": "user_token_in_ata",
+          "writable": true
+        },
+        {
+          "name": "escrow_token_in_ata",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "escrow_pda"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_in_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "fee_token_in_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_in_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_sol_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  97,
+                  109,
+                  112,
+                  111,
+                  114,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "intent_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  116,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "new_intent.intent_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "clock",
+          "address": "SysvarC1ock11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "token_2022_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "new_intent",
+          "type": {
+            "defined": {
+              "name": "NewIntent"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "finalize_auction",
+      "discriminator": [
+        220,
+        209,
+        175,
+        193,
+        57,
+        132,
+        241,
+        168
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "escrow_pda"
+          ]
+        },
+        {
+          "name": "escrow_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "intent_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  116,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "intent_id"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "intent_id",
+          "type": "u64"
+        },
+        {
+          "name": "solver",
+          "type": "pubkey"
+        },
+        {
+          "name": "amount_out",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "initialize",
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "escrow_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrow_sol_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  97,
+                  109,
+                  112,
+                  111,
+                  114,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_sol_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  97,
+                  109,
+                  112,
+                  111,
+                  114,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "set_fees",
+      "discriminator": [
+        137,
+        178,
+        49,
+        58,
+        0,
+        245,
+        242,
+        190
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "escrow_pda"
+          ]
+        },
+        {
+          "name": "escrow_pda",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "default_flat_fee",
+          "type": "u64"
+        },
+        {
+          "name": "agent_flat_fee",
+          "type": "u64"
+        },
+        {
+          "name": "default_percent_fee",
+          "type": "u16"
+        },
+        {
+          "name": "agent_percent_fee",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "solve_intent_local",
+      "discriminator": [
+        117,
+        194,
+        126,
+        219,
+        56,
+        115,
+        37,
+        112
+      ],
+      "accounts": [
+        {
+          "name": "solver",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "intent_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  116,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "intent_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrow_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrow_sol_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  97,
+                  109,
+                  112,
+                  111,
+                  114,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_in_mint"
+        },
+        {
+          "name": "token_out_mint"
+        },
+        {
+          "name": "escrow_token_in_ata",
+          "writable": true
+        },
+        {
+          "name": "solver_token_in_ata",
+          "writable": true
+        },
+        {
+          "name": "solver_token_out_ata",
+          "writable": true
+        },
+        {
+          "name": "user_token_out_ata",
+          "writable": true
+        },
+        {
+          "name": "dst_user",
+          "writable": true
+        },
+        {
+          "name": "src_user",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "token_2022_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "intent_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "solve_intent_remote",
+      "discriminator": [
+        222,
+        3,
+        223,
+        105,
+        201,
+        123,
+        213,
+        25
+      ],
+      "accounts": [
+        {
+          "name": "solver",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "escrow_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_out_mint"
+        },
+        {
+          "name": "solver_token_out_ata",
+          "writable": true
+        },
+        {
+          "name": "user_token_out_ata",
+          "writable": true
+        },
+        {
+          "name": "dst_user",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "token_2022_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "intent_id",
+          "type": "u64"
+        },
+        {
+          "name": "src_chain_id",
+          "type": "u8"
+        },
+        {
+          "name": "dst_user",
+          "type": "pubkey"
+        },
+        {
+          "name": "token_out",
+          "type": "pubkey"
+        },
+        {
+          "name": "amount_out",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "unlock_solver_funds",
+      "discriminator": [
+        208,
+        27,
+        171,
+        61,
+        158,
+        164,
+        228,
+        1
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "escrow_pda"
+          ]
+        },
+        {
+          "name": "escrow_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrow_sol_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  97,
+                  109,
+                  112,
+                  111,
+                  114,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "intent_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  116,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "intent_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_in_mint"
+        },
+        {
+          "name": "escrow_token_in_ata",
+          "writable": true
+        },
+        {
+          "name": "solver_token_in_ata",
+          "writable": true
+        },
+        {
+          "name": "solver",
+          "writable": true
+        },
+        {
+          "name": "src_user",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "token_2022_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "intent_id",
+          "type": "u64"
+        },
+        {
+          "name": "src_chain_id",
+          "type": "u8"
+        },
+        {
+          "name": "dst_user",
+          "type": "string"
+        },
+        {
+          "name": "token_out",
+          "type": "string"
+        },
+        {
+          "name": "amount_out",
+          "type": "string"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "EscrowAccount",
+      "discriminator": [
+        36,
+        69,
+        48,
+        18,
+        128,
+        225,
+        125,
+        135
+      ]
+    },
+    {
+      "name": "FeeAccount",
+      "discriminator": [
+        137,
+        191,
+        201,
+        34,
+        168,
+        222,
+        43,
+        138
+      ]
+    },
+    {
+      "name": "Intent",
+      "discriminator": [
+        247,
+        162,
+        35,
+        165,
+        254,
+        111,
+        129,
+        109
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "CanceledIntent",
+      "discriminator": [
+        129,
+        42,
+        89,
+        207,
+        195,
+        173,
+        63,
+        214
+      ]
+    },
+    {
+      "name": "CollectedFees",
+      "discriminator": [
+        36,
+        15,
+        20,
+        38,
+        181,
+        135,
+        83,
+        60
+      ]
+    },
+    {
+      "name": "EscrowedFunds",
+      "discriminator": [
+        184,
+        181,
+        119,
+        172,
+        40,
+        179,
+        29,
+        19
+      ]
+    },
+    {
+      "name": "FinalizedAuction",
+      "discriminator": [
+        241,
+        76,
+        181,
+        186,
+        25,
+        193,
+        164,
+        75
+      ]
+    },
+    {
+      "name": "SolvedIntentLocal",
+      "discriminator": [
+        124,
+        127,
+        139,
+        9,
+        75,
+        28,
+        79,
+        60
+      ]
+    },
+    {
+      "name": "SolvedIntentRemote",
+      "discriminator": [
+        10,
+        205,
+        97,
+        121,
+        17,
+        41,
+        109,
+        172
+      ]
+    },
+    {
+      "name": "UnlockedSolverFunds",
+      "discriminator": [
+        159,
+        69,
+        73,
+        123,
+        253,
+        157,
+        115,
+        69
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidTimeout",
+      "msg": "Invalid intent timeout"
+    },
+    {
+      "code": 6001,
+      "name": "IntentNotTimedOut",
+      "msg": "Intent has not timed out yet"
+    },
+    {
+      "code": 6002,
+      "name": "BadPublicKey",
+      "msg": "Unable to parse Pubkey from String"
+    },
+    {
+      "code": 6003,
+      "name": "IntentAlreadyExists",
+      "msg": "Intent already exists"
+    },
+    {
+      "code": 6004,
+      "name": "SrcUserNotSender",
+      "msg": "Intent src_user does not match the sender"
+    },
+    {
+      "code": 6005,
+      "name": "IntentDoesNotExist",
+      "msg": "Intent does not exist"
+    },
+    {
+      "code": 6006,
+      "name": "SrcUserMismatch",
+      "msg": "Intent src_user is different than the provided src_user"
+    },
+    {
+      "code": 6007,
+      "name": "SrcChainIdMismatch",
+      "msg": "Intent src_chain_id is different than the provided src_chain_id"
+    },
+    {
+      "code": 6008,
+      "name": "InvalidRemoteChainId",
+      "msg": "Remote chain_id is the same as the local chain_id"
+    },
+    {
+      "code": 6009,
+      "name": "DstUserMismatch",
+      "msg": "Intent dst_user is different than the provided dst_user"
+    },
+    {
+      "code": 6010,
+      "name": "InvalidIntentId",
+      "msg": "Intent ID must be a random 12 digit number"
+    },
+    {
+      "code": 6011,
+      "name": "InvalidTokenOut",
+      "msg": "Invalid token_out"
+    },
+    {
+      "code": 6012,
+      "name": "InvalidAmountOut",
+      "msg": "Invalid amount_out"
+    },
+    {
+      "code": 6013,
+      "name": "InvalidAmountIn",
+      "msg": "Invalid amount_in"
+    },
+    {
+      "code": 6014,
+      "name": "InvalidDstUser",
+      "msg": "Invalid dst_user address"
+    },
+    {
+      "code": 6015,
+      "name": "TokenInNotAtaMint",
+      "msg": "Intent token_in does not match the ATA mint"
+    },
+    {
+      "code": 6016,
+      "name": "SrcUserNotAtaOwner",
+      "msg": "Intent src_user does not match the ATA owner"
+    },
+    {
+      "code": 6017,
+      "name": "CouldNotCloseAccount",
+      "msg": "Could not close an account"
+    }
+  ],
+  "types": [
+    {
+      "name": "CanceledIntent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "intent_id",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CollectedFees",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "token_in",
+            "type": "pubkey"
+          },
+          {
+            "name": "fee_recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "fee_amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EscrowAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EscrowedFunds",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "intent_id",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FeeAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "default_flat_fee",
+            "type": "u64"
+          },
+          {
+            "name": "agent_flat_fee",
+            "type": "u64"
+          },
+          {
+            "name": "default_percent_fee",
+            "type": "u16"
+          },
+          {
+            "name": "agent_percent_fee",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FinalizedAuction",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "intent_id",
+            "type": "u64"
+          },
+          {
+            "name": "solver",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount_out",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Intent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "intent_id",
+            "type": "u64"
+          },
+          {
+            "name": "src_user",
+            "type": "pubkey"
+          },
+          {
+            "name": "dst_user",
+            "type": "string"
+          },
+          {
+            "name": "src_chain_id",
+            "type": "u8"
+          },
+          {
+            "name": "dst_chain_id",
+            "type": "u8"
+          },
+          {
+            "name": "token_in",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount_in",
+            "type": "u64"
+          },
+          {
+            "name": "token_out",
+            "type": "string"
+          },
+          {
+            "name": "amount_out",
+            "type": "string"
+          },
+          {
+            "name": "solver",
+            "type": "pubkey"
+          },
+          {
+            "name": "creation",
+            "type": "u64"
+          },
+          {
+            "name": "timeout",
+            "type": "u64"
+          },
+          {
+            "name": "ai_agent",
+            "type": "bool"
+          },
+          {
+            "name": "refund_amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "NewIntent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "intent_id",
+            "type": "u64"
+          },
+          {
+            "name": "src_user",
+            "type": "pubkey"
+          },
+          {
+            "name": "dst_user",
+            "type": "string"
+          },
+          {
+            "name": "dst_chain_id",
+            "type": "u8"
+          },
+          {
+            "name": "token_in",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount_in",
+            "type": "u64"
+          },
+          {
+            "name": "token_out",
+            "type": "string"
+          },
+          {
+            "name": "amount_out",
+            "type": "string"
+          },
+          {
+            "name": "timeout",
+            "type": "u64"
+          },
+          {
+            "name": "ai_agent",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SolvedIntentLocal",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "intent_id",
+            "type": "u64"
+          },
+          {
+            "name": "solver",
+            "type": "pubkey"
+          },
+          {
+            "name": "dst_user",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_in",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount_in",
+            "type": "u64"
+          },
+          {
+            "name": "token_out",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount_out",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SolvedIntentRemote",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "intent_id",
+            "type": "u64"
+          },
+          {
+            "name": "src_chain_id",
+            "type": "u8"
+          },
+          {
+            "name": "dst_user",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_out",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount_out",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UnlockedSolverFunds",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "intent_id",
+            "type": "u64"
+          },
+          {
+            "name": "solver",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_in",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount_in",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ]
+}

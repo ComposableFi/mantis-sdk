@@ -350,3 +350,8 @@ export const escrowAbi = [
     name: 'UnlockedSolverFunds',
   },
 ] as const
+
+export const escrowAddress =
+  '0xAF55771e9cd32F93532670Ef358c8703d598505C' as const
+
+export const escrowConfig = { address: escrowAddress, abi: escrowAbi } as const
