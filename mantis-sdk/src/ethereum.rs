@@ -1,18 +1,15 @@
-#![allow(unused)]
-
-use std::sync::Arc;
-
-use alloy::network::EthereumWallet;
-use alloy::primitives::{address, Address, U256};
-use alloy::providers::ProviderBuilder;
-use alloy::rpc::types::TransactionReceipt;
-use alloy::signers::local::{LocalSigner, PrivateKeySigner};
+use alloy::network::Ethereum;
+use alloy::primitives::{address, Address, Bytes, TxKind, U256};
+use alloy::providers::{Provider, WalletProvider};
+use alloy::rpc::types::{TransactionInput, TransactionReceipt, TransactionRequest};
 use alloy::sol;
-use anyhow::Result;
+use alloy::transports::Transport;
+use anyhow::{anyhow, Result};
 use chrono::Utc;
-use num::BigUint;
-use rand::Rng;
+use log::info;
 use Escrow::NewIntent;
+
+use crate::{random_intent_id, retry};
 
 sol!(
     #[allow(missing_docs)]
@@ -30,72 +27,302 @@ sol!(
 
 pub const ETH_TOKEN_ADDRESS: Address = address!("0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE");
 pub const INTENT_CHAIN_ID: u8 = 1;
-pub const ETHEREUM_URL: &str = "https://rpc.flashbots.net/";
-pub const ESCROW_SC_ADDRESS: Address = address!("0xAF55771e9cd32F93532670Ef358c8703d598505C");
 
-async fn escrow_funds(
-    signer: PrivateKeySigner,
+#[derive(Default, Debug, Clone)]
+pub struct GasFees {
+    pub max_fee_per_gas: u128,
+    pub max_priority_fee_per_gas: u128,
+}
+
+pub async fn escrow_funds<P, T>(
+    provider: P,
+    escrow_address: Address,
     token_in: Address,
-    amount_in: BigUint,
+    amount_in: U256,
     token_out: String,
-    amount_out: BigUint,
+    amount_out: U256,
     dst_user: String,
     dst_chain_id: u8,
-) -> Result<TransactionReceipt> {
-    let wallet = EthereumWallet::from(signer.clone());
-    let provider = Arc::new(
-        ProviderBuilder::new()
-            .with_recommended_fillers()
-            .wallet(wallet)
-            .on_http(ETHEREUM_URL.parse()?),
-    );
-    let contract = Escrow::new(ESCROW_SC_ADDRESS, provider.clone());
+    timeout_sec: u64,
+    ai_agent: bool,
+) -> Result<TransactionReceipt>
+where
+    P: Provider<T, Ethereum> + Clone + WalletProvider<Ethereum>,
+    T: Transport + Clone,
+{
+    let escrow_contract = Escrow::new(escrow_address, provider.clone());
 
     let intent_id = random_intent_id();
 
-    let token_in_contract = ERC20::new(token_in, provider.clone());
+    let tx_value = (token_in == ETH_TOKEN_ADDRESS)
+        .then_some(amount_in)
+        .unwrap_or_default();
 
-    let amount_in = U256::from_le_slice(&amount_in.to_bytes_le());
+    let receipt = approve_erc20(provider.clone(), token_in, escrow_address, amount_in).await?;
 
-    let tx_value = if token_in == ETH_TOKEN_ADDRESS {
-        amount_in
-    } else {
-        U256::from(0)
-    };
-
-    let _receipt = token_in_contract
-        .approve(ESCROW_SC_ADDRESS, amount_in)
-        .from(signer.address())
-        .send()
-        .await?
-        .get_receipt()
-        .await?;
+    info!(
+        "Approved {} of token {} to {} ({})",
+        amount_in,
+        token_in.to_checksum(None),
+        escrow_address.to_checksum(None),
+        receipt.transaction_hash,
+    );
 
     let intent = NewIntent {
         intentId: intent_id,
         dstChainId: dst_chain_id,
-        srcUser: signer.address(),
+        srcUser: provider.default_signer_address(),
         dstUser: dst_user,
         tokenIn: token_in,
         amountIn: amount_in,
         tokenOut: token_out,
-        amountOut: U256::from_le_slice(&amount_out.to_bytes_le()),
-        timeout: U256::from(Utc::now().timestamp() + 360),
-        aiAgent: false,
+        amountOut: amount_out,
+        timeout: U256::from(Utc::now().timestamp() as u64 + timeout_sec),
+        aiAgent: ai_agent,
     };
 
-    let receipt = contract
-        .escrowFunds(intent)
-        .from(signer.address())
-        .value(tx_value)
-        .send()
-        .await?
-        .get_receipt()
-        .await?;
+    let pending = retry(
+        || async {
+            escrow_contract
+                .escrowFunds(intent.clone())
+                .value(tx_value)
+                .send()
+                .await
+        },
+        3,
+    )
+    .await?;
+
+    let tx_hash = pending.tx_hash();
+
+    info!(
+        "Ethereum escrowFunds transaction {} was sent to the network",
+        tx_hash
+    );
+
+    let receipt = retry(
+        || async {
+            provider
+                .get_transaction_receipt(*tx_hash)
+                .await?
+                .ok_or(anyhow!("No transaction receipt"))
+        },
+        5,
+    )
+    .await?;
 
     Ok(receipt)
 }
 
-pub fn random_intent_id() -> u64 {
-    rand::thread_rng().gen_range(100_000_000_000..=999_999_999_999)
+pub async fn solve_intent_remote<P, T>(
+    provider: P,
+    escrow_address: Address,
+    intent_id: u64,
+    token_out: Address,
+    amount_out: U256,
+    dst_user: Address,
+    dst_chain_id: u8,
+    tx_value: U256,
+) -> Result<TransactionReceipt>
+where
+    P: Provider<T, Ethereum> + Clone + WalletProvider<Ethereum>,
+    T: Transport + Clone,
+{
+    let escrow_contract = Escrow::new(escrow_address, provider.clone());
+
+    let pending = retry(
+        || async {
+            escrow_contract
+                .solveIntentRemote(intent_id, dst_chain_id, token_out, amount_out, dst_user)
+                .value(tx_value)
+                .send()
+                .await
+        },
+        3,
+    )
+    .await?;
+
+    let tx_hash = pending.tx_hash();
+
+    info!(
+        "Ethereum solveIntentRemote transaction {} was sent to the network",
+        tx_hash
+    );
+
+    let receipt = retry(
+        || async {
+            provider
+                .get_transaction_receipt(*tx_hash)
+                .await?
+                .ok_or(anyhow!("No transaction receipt"))
+        },
+        5,
+    )
+    .await?;
+
+    Ok(receipt)
+}
+
+pub async fn solve_intent_local<P, T>(
+    provider: P,
+    escrow_address: Address,
+    intent_id: u64,
+    tx_value: U256,
+) -> Result<TransactionReceipt>
+where
+    P: Provider<T, Ethereum> + Clone + WalletProvider<Ethereum>,
+    T: Transport + Clone,
+{
+    let escrow_contract = Escrow::new(escrow_address, provider.clone());
+
+    let pending = retry(
+        || async {
+            escrow_contract
+                .solveIntentLocal(intent_id)
+                .value(tx_value)
+                .send()
+                .await
+        },
+        3,
+    )
+    .await?;
+
+    let tx_hash = pending.tx_hash();
+
+    info!(
+        "Ethereum solveIntentLocal transaction {} was sent to the network",
+        tx_hash
+    );
+
+    let receipt = retry(
+        || async {
+            provider
+                .get_transaction_receipt(*tx_hash)
+                .await?
+                .ok_or(anyhow!("No transaction receipt"))
+        },
+        5,
+    )
+    .await?;
+
+    Ok(receipt)
+}
+
+pub async fn cancel_intent<P, T>(
+    provider: P,
+    escrow_address: Address,
+    intent_id: u64,
+) -> Result<TransactionReceipt>
+where
+    P: Provider<T, Ethereum> + Clone + WalletProvider<Ethereum>,
+    T: Transport + Clone,
+{
+    let contract = Escrow::new(escrow_address, provider.clone());
+
+    let pending = retry(|| async { contract.cancelIntent(intent_id).send().await }, 3).await?;
+
+    let tx_hash = pending.tx_hash();
+
+    info!(
+        "Ethereum cancelIntent transaction {} was sent to the network",
+        tx_hash
+    );
+
+    let receipt = retry(
+        || async {
+            provider
+                .get_transaction_receipt(*tx_hash)
+                .await?
+                .ok_or(anyhow!("No transaction receipt"))
+        },
+        5,
+    )
+    .await?;
+
+    info!("Canceled intent {} on Ethereum", intent_id);
+    Ok(receipt)
+}
+
+pub async fn approve_erc20<P, T>(
+    provider: P,
+    token: Address,
+    spender: Address,
+    amount: U256,
+) -> Result<TransactionReceipt>
+where
+    P: Provider<T, Ethereum> + Clone + WalletProvider<Ethereum>,
+    T: Transport + Clone,
+{
+    let token_contract = ERC20::new(token, provider.clone());
+
+    let pending = retry(
+        || async { token_contract.approve(spender, amount).send().await },
+        3,
+    )
+    .await?;
+
+    let tx_hash = pending.tx_hash();
+
+    info!("Ethereum approve transaction {} was sent to the network", tx_hash);
+
+    let receipt = retry(
+        || async {
+            provider
+                .get_transaction_receipt(*tx_hash)
+                .await?
+                .ok_or(anyhow!("No transaction receipt"))
+        },
+        5,
+    )
+    .await?;
+
+    Ok(receipt)
+}
+
+pub async fn send_raw_tx<P, T>(
+    provider: P,
+    to: Address,
+    data: Bytes,
+    chain_id: u8,
+    gas: u64,
+    gas_fees: GasFees,
+    value: U256,
+) -> Result<TransactionReceipt>
+where
+    P: Provider<T, Ethereum> + Clone + WalletProvider<Ethereum>,
+    T: Transport + Clone,
+{
+    let transaction = TransactionRequest {
+        to: Some(TxKind::Call(to)),
+        gas: Some(gas),
+        value: Some(value),
+        input: TransactionInput {
+            input: Some(data),
+            data: None,
+        },
+        chain_id: Some(chain_id.into()),
+        transaction_type: Some(2),
+        access_list: None,
+        max_fee_per_gas: Some(gas_fees.max_fee_per_gas),
+        max_priority_fee_per_gas: Some(gas_fees.max_priority_fee_per_gas),
+        ..Default::default()
+    };
+
+    let pending = retry(|| provider.send_transaction(transaction.clone()), 3).await?;
+    let tx_hash = pending.tx_hash();
+
+    info!("Ethereum transaction {} was sent to the network", tx_hash);
+
+    let receipt = retry(
+        || async {
+            provider
+                .get_transaction_receipt(*tx_hash)
+                .await?
+                .ok_or(anyhow!("No transaction receipt"))
+        },
+        5,
+    )
+    .await?;
+
+    Ok(receipt)
 }

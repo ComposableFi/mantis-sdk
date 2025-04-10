@@ -1,0 +1,11 @@
+comment_width = 110
+group_imports = "StdExternalCrate"
+imports_granularity = "Module"
+imports_layout = "HorizontalVertical"
+max_width = 110
+newline_style = "Unix"
+reorder_imports = true
+reorder_modules = true
+trailing_semicolon = false
+use_field_init_shorthand = true
+wrap_comments = false
