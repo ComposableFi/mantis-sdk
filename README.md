@@ -9,19 +9,19 @@ cargo install --path=mantis-cli
 To perform a swap from USDC to USDT on Solana with 5 min timeout:
 
 ```sh
-mantis-cli swap --src_chain=solana --dst_chain=solana --dst_user=4SsL3qQCbE4ff2PnZmAExLye85GETnsVZgouapAL7fGn --token_in=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v --token_out=Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB --amount_in=10000000 --amount_out=1 --timeout=300
+mantis-cli swap --src-chain=solana --dst-chain=solana --token-in=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v --amount-in=10000000 --token-out=Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB  --amount-out=1 --timeout=300
 ```
 
 To perform a cross-chain swap from ETH on Ethereum to SOL on Solana with 10 min timeout:
 
 ```sh
-mantis-cli swap --src_chain=ethereum --dst_chain=solana --dst_user=4SsL3qQCbE4ff2PnZmAExLye85GETnsVZgouapAL7fGn --token_in=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE --token_out=11111111111111111111111111111111 --amount_in=10000000000000000 --amount_out=1 --timeout=600
+mantis-cli swap --src-chain=ethereum --dst-chain=solana --token-in=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE --amount-in=10000000000000000 --token-out=11111111111111111111111111111111 --amount-out=1 --timeout=600
 ```
 
 To cancel an existing intent on Solana:
 
 ```sh
-mantis-cli cancel --src_chain=solana --intent_id=123456789000
+mantis-cli cancel --src-chain=solana --intent-id=123456789000
 ```
 
 # Mantis SDK 🦀
