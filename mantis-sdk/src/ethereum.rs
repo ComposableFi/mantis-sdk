@@ -6,7 +6,7 @@ use alloy::sol;
 use alloy::transports::Transport;
 use anyhow::{anyhow, Result};
 use chrono::Utc;
-use log::info;
+use tracing::{info, instrument};
 use Escrow::NewIntent;
 
 use crate::{random_intent_id, retry};
@@ -34,6 +34,7 @@ pub struct GasFees {
     pub max_priority_fee_per_gas: u128,
 }
 
+#[instrument(skip_all)]
 pub async fn escrow_funds<P, T>(
     provider: P,
     escrow_address: Address,
@@ -114,6 +115,7 @@ where
     Ok(receipt)
 }
 
+#[instrument(skip_all)]
 pub async fn solve_intent_remote<P, T>(
     provider: P,
     escrow_address: Address,
@@ -163,6 +165,7 @@ where
     Ok(receipt)
 }
 
+#[instrument(skip_all)]
 pub async fn solve_intent_local<P, T>(
     provider: P,
     escrow_address: Address,
@@ -208,6 +211,7 @@ where
     Ok(receipt)
 }
 
+#[instrument(skip_all)]
 pub async fn cancel_intent<P, T>(
     provider: P,
     escrow_address: Address,
@@ -243,6 +247,7 @@ where
     Ok(receipt)
 }
 
+#[instrument(skip_all)]
 pub async fn approve_erc20<P, T>(
     provider: P,
     token: Address,
@@ -279,6 +284,7 @@ where
     Ok(receipt)
 }
 
+#[instrument(skip_all)]
 pub async fn send_raw_tx<P, T>(
     provider: P,
     to: Address,

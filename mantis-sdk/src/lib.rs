@@ -2,9 +2,9 @@ use std::fmt::Display;
 use std::future::Future;
 use std::time::Duration;
 
-use log::{error, warn};
 use rand::Rng;
 use tokio::time::sleep;
+use tracing::{error, warn};
 
 pub mod auction;
 pub mod ethereum;

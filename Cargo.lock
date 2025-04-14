@@ -4645,8 +4645,6 @@ dependencies = [
  "anyhow",
  "base64 0.22.1",
  "chrono",
- "env_logger 0.11.8",
- "log",
  "num 0.4.3",
  "rand 0.8.5",
  "solana-client",
@@ -4661,6 +4659,7 @@ dependencies = [
  "spl-token 7.0.0",
  "spl-token-2022 7.0.0",
  "tokio",
+ "tracing",
 ]
 
 [[package]]
