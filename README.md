@@ -38,6 +38,6 @@ The `mantis_sdk::auction` module provides a way for solvers to integrate with th
 
 A TypeScript SDK library to interact with the Mantis smart contracts.
 
-The `ethereum.ts` module abstracts the Ethereum smart contract interactions and provides various utility functions.
+The `ethereum` module abstracts the Ethereum smart contract interactions and provides various utility functions.
 
-The `solana.ts` module abstracts the Solana Anchor program interactions and provides various utility functions.
+The `solana` module abstracts the Solana Anchor program interactions and provides various utility functions.
