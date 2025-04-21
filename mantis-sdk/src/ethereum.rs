@@ -4,8 +4,9 @@ use alloy::providers::{Provider, WalletProvider};
 use alloy::rpc::types::{TransactionInput, TransactionReceipt, TransactionRequest};
 use alloy::sol;
 use alloy::transports::Transport;
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Error, Result};
 use chrono::Utc;
+use strum::FromRepr;
 use tracing::{info, instrument};
 use Escrow::NewIntent;
 
@@ -26,7 +27,27 @@ sol!(
 );
 
 pub const ETH_TOKEN_ADDRESS: Address = address!("0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE");
-pub const INTENT_CHAIN_ID: u8 = 1;
+
+#[derive(Debug, FromRepr, Clone, Copy, PartialEq, Eq)]
+#[repr(u64)]
+pub enum EvmChainId {
+    Ethereum = 1,
+    Base = 8453,
+}
+
+impl From<EvmChainId> for u64 {
+    fn from(chain: EvmChainId) -> Self {
+        chain as u64
+    }
+}
+
+impl TryFrom<u64> for EvmChainId {
+    type Error = Error;
+
+    fn try_from(id: u64) -> Result<Self, Self::Error> {
+        EvmChainId::from_repr(id).context("invalid intent chain id")
+    }
+}
 
 #[derive(Default, Debug, Clone)]
 pub struct GasFees {
@@ -285,11 +306,11 @@ where
 }
 
 #[instrument(skip_all)]
-pub async fn send_raw_tx<P, T>(
+pub async fn send_transaction<P, T>(
     provider: P,
     to: Address,
     data: Bytes,
-    chain_id: u8,
+    chain_id: EvmChainId,
     gas: u64,
     gas_fees: GasFees,
     value: U256,

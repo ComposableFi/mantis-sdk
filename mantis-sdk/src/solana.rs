@@ -24,6 +24,7 @@ use solana_transaction_status::EncodedConfirmedTransactionWithStatusMeta;
 use spl_associated_token_account::get_associated_token_address_with_program_id;
 use spl_associated_token_account::instruction::create_associated_token_account_idempotent;
 use spl_token::instruction::transfer;
+use spl_token::native_mint;
 use tracing::{info, instrument};
 
 use crate::{random_intent_id, retry};
@@ -40,14 +41,14 @@ pub const INTENT_SEED: &[u8] = b"intent";
 pub const INTENT_CHAIN_ID: u8 = 2;
 
 #[derive(Debug, Clone, Default)]
-pub struct TxInstructions {
+pub struct VTransaction {
     pub instructions: Vec<Instruction>,
     pub address_lookup_table: Vec<AddressLookupTableAccount>,
 }
 
-impl TxInstructions {
+impl VTransaction {
     pub fn new(instructions: Vec<Instruction>, address_lookup_table: Vec<AddressLookupTableAccount>) -> Self {
-        TxInstructions {
+        VTransaction {
             instructions,
             address_lookup_table,
         }
@@ -142,11 +143,7 @@ pub async fn escrow_funds(
         .args(escrow_args)
         .instructions()?;
 
-    let recent_blockhash = retry(
-        || client.get_latest_blockhash(),
-        3,
-    )
-    .await?;
+    let recent_blockhash = retry(|| client.get_latest_blockhash(), 3).await?;
 
     let escrow_transaction = Transaction::new_signed_with_payer(
         &escrow_instructions,
@@ -155,11 +152,7 @@ pub async fn escrow_funds(
         recent_blockhash,
     );
 
-    let signature = retry(
-        || client.send_and_confirm_transaction(&escrow_transaction),
-        3,
-    )
-    .await?;
+    let signature = retry(|| client.send_and_confirm_transaction(&escrow_transaction), 3).await?;
     Ok(signature)
 }
 
@@ -169,24 +162,33 @@ pub async fn cancel_intent(
     payer: Arc<Keypair>,
     program_id: Pubkey,
     intent_id: u64,
-    token_in: Pubkey,
+    mut token_in: Pubkey,
+    src_user: Pubkey,
 ) -> Result<Signature> {
     let cluster = Cluster::Custom(client.url(), String::default());
-    let client_anchor = Client::new_with_options(cluster, payer.clone(), CommitmentConfig::processed());
+    let client_anchor = Client::new_with_options(cluster, payer.clone(), CommitmentConfig::confirmed());
     let program = client_anchor.program(program_id)?;
 
-    let (escrow_pda, _) = Pubkey::find_program_address(&[ESCROW_SEED], &program_id);
-    let (escrow_sol_pda, _) = Pubkey::find_program_address(&[ESCROW_SEED, SOL_SEED], &program_id);
-    let (fee_sol_pda, _) = Pubkey::find_program_address(&[FEE_SEED, SOL_SEED], &program_id);
-    let (intent_pda, _) = Pubkey::find_program_address(&[INTENT_SEED, &intent_id.to_le_bytes()], &program_id);
-    let (fee_token_in_pda, _) = Pubkey::find_program_address(&[FEE_SEED, token_in.as_ref()], &program_id);
+    if token_in == Pubkey::default() {
+        token_in = native_mint::ID;
+    }
 
-    let src_user = payer.pubkey();
-    let token_program_id = get_token_program_id(client, &token_in).await?;
-    let user_token_in_ata =
-        get_associated_token_address_with_program_id(&src_user, &token_in, &token_program_id);
-    let escrow_token_in_ata =
-        get_associated_token_address_with_program_id(&escrow_pda, &token_in, &token_program_id);
+    let (escrow_pda, _) = Pubkey::find_program_address(&[ESCROW_SEED], &program.id());
+
+    let (escrow_sol_pda, _) = Pubkey::find_program_address(&[ESCROW_SEED, SOL_SEED], &program.id());
+
+    let (fee_sol_pda, _) = Pubkey::find_program_address(&[FEE_SEED, SOL_SEED], &program.id());
+
+    let (fee_token_in_pda, _) = Pubkey::find_program_address(&[FEE_SEED, token_in.as_ref()], &program.id());
+
+    let (intent_pda, _) =
+        Pubkey::find_program_address(&[INTENT_SEED, &intent_id.to_le_bytes()], &program.id());
+
+    let (user_token_in_ata_ix, user_token_in_ata) =
+        create_associated_token_account_ix(client, payer.clone(), src_user, token_in).await?;
+
+    let (escrow_token_in_ata_ix, escrow_token_in_ata) =
+        create_associated_token_account_ix(client, payer.clone(), escrow_pda, token_in).await?;
 
     let cancel_accounts = accounts::CancelIntent {
         signer: payer.pubkey(),
@@ -210,15 +212,13 @@ pub async fn cancel_intent(
 
     let cancel_instructions = program
         .request()
+        .instruction(user_token_in_ata_ix)
+        .instruction(escrow_token_in_ata_ix)
         .accounts(cancel_accounts)
         .args(cancel_args)
         .instructions()?;
 
-    let recent_blockhash = retry(
-        || client.get_latest_blockhash(),
-        3,
-    )
-    .await?;
+    let recent_blockhash = retry(|| client.get_latest_blockhash(), 3).await?;
 
     let cancel_transaction = Transaction::new_signed_with_payer(
         &cancel_instructions,
@@ -227,11 +227,7 @@ pub async fn cancel_intent(
         recent_blockhash,
     );
 
-    let signature = retry(
-        || client.send_and_confirm_transaction(&cancel_transaction),
-        3,
-    )
-    .await?;
+    let signature = retry(|| client.send_and_confirm_transaction(&cancel_transaction), 3).await?;
     Ok(signature)
 }
 
@@ -264,11 +260,7 @@ pub async fn initialize(client: &RpcClient, payer: Arc<Keypair>, program_id: Pub
         .args(initialize_args)
         .instructions()?;
 
-    let recent_blockhash = retry(
-        || client.get_latest_blockhash(),
-        3,
-    )
-    .await?;
+    let recent_blockhash = retry(|| client.get_latest_blockhash(), 3).await?;
 
     let initialize_tx = Transaction::new_signed_with_payer(
         &initialize_ix,
@@ -277,11 +269,7 @@ pub async fn initialize(client: &RpcClient, payer: Arc<Keypair>, program_id: Pub
         recent_blockhash,
     );
 
-    let signature = retry(
-        || client.send_and_confirm_transaction(&initialize_tx),
-        3,
-    )
-    .await?;
+    let signature = retry(|| client.send_and_confirm_transaction(&initialize_tx), 3).await?;
     Ok(signature)
 }
 
@@ -295,11 +283,7 @@ pub async fn create_associated_token_account(
     let (create_associated_account_ix, ata) =
         create_associated_token_account_ix(client, payer.clone(), user, token_mint).await?;
 
-    let recent_blockhash = retry(
-        || client.get_latest_blockhash(),
-        3,
-    )
-    .await?;
+    let recent_blockhash = retry(|| client.get_latest_blockhash(), 3).await?;
 
     let create_associated_account_tx = Transaction::new_signed_with_payer(
         &[create_associated_account_ix],
@@ -343,11 +327,7 @@ pub async fn get_transaction_info(
         commitment: Some(CommitmentConfig::confirmed()),
         max_supported_transaction_version: Some(0),
     };
-    let transaction_info = retry(
-        || client.get_transaction_with_config(&signature, config),
-        3,
-    )
-    .await?;
+    let transaction_info = retry(|| client.get_transaction_with_config(&signature, config), 3).await?;
 
     Ok(transaction_info)
 }
@@ -357,11 +337,7 @@ pub async fn get_lookup_table_accounts(
     client: &RpcClient,
     lookup_table_addresses: &[Pubkey],
 ) -> Result<Vec<AddressLookupTableAccount>> {
-    let lookup_table_accounts = retry(
-        || client.get_multiple_accounts(lookup_table_addresses),
-        3,
-    )
-    .await?;
+    let lookup_table_accounts = retry(|| client.get_multiple_accounts(lookup_table_addresses), 3).await?;
 
     lookup_table_addresses
         .iter()
@@ -389,11 +365,7 @@ pub async fn transfer_spl_token(
     let transfer_spl_token_ix =
         transfer_spl_token_ix(client, sender.clone(), recipient, token_mint, amount).await?;
 
-    let recent_blockhash = retry(
-        || client.get_latest_blockhash(),
-        3,
-    )
-    .await?;
+    let recent_blockhash = retry(|| client.get_latest_blockhash(), 3).await?;
 
     let transfer_spl_token_tx = Transaction::new_signed_with_payer(
         &transfer_spl_token_ix,
@@ -402,11 +374,7 @@ pub async fn transfer_spl_token(
         recent_blockhash,
     );
 
-    let signature = retry(
-        || client.send_and_confirm_transaction(&transfer_spl_token_tx),
-        3,
-    )
-    .await?;
+    let signature = retry(|| client.send_and_confirm_transaction(&transfer_spl_token_tx), 3).await?;
     Ok(signature)
 }
 
@@ -450,7 +418,7 @@ pub async fn transfer_spl_token_ix(
 pub async fn submit_through_rpc(
     client: &RpcClient,
     payer: Arc<Keypair>,
-    transaction: &TxInstructions,
+    transaction: &VTransaction,
     legacy_transaction: bool,
 ) -> Result<Signature> {
     if legacy_transaction {
@@ -458,36 +426,22 @@ pub async fn submit_through_rpc(
             &transaction.instructions,
             Some(&payer.pubkey()),
             &[&*payer],
-            retry(
-                || client.get_latest_blockhash(),
-                3,
-            )
-            .await?,
+            retry(|| client.get_latest_blockhash(), 3).await?,
         );
-        retry(
-            || client.send_and_confirm_transaction(&transaction),
-            3,
-        )
-        .await
-        .context("Failed to send legacy transaction")
+        retry(|| client.send_and_confirm_transaction(&transaction), 3)
+            .await
+            .context("Failed to send legacy transaction")
     } else {
         let message = v0::Message::try_compile(
             &payer.pubkey(),
             &transaction.instructions,
             &transaction.address_lookup_table,
-            retry(
-                || client.get_latest_blockhash(),
-                3,
-            )
-            .await?,
+            retry(|| client.get_latest_blockhash(), 3).await?,
         )?;
         let transaction = VersionedTransaction::try_new(VersionedMessage::V0(message), &[&payer])?;
-        retry(
-            || client.send_and_confirm_transaction(&transaction),
-            3,
-        )
-        .await
-        .context("Failed to send versioned transaction")
+        retry(|| client.send_and_confirm_transaction(&transaction), 3)
+            .await
+            .context("Failed to send versioned transaction")
     }
 }
 
@@ -495,7 +449,7 @@ pub async fn submit_through_rpc(
 pub async fn submit_through_rpc_multiple(
     client: &RpcClient,
     payer: Arc<Keypair>,
-    transactions: Vec<TxInstructions>,
+    transactions: Vec<VTransaction>,
 ) -> Result<Vec<Signature>> {
     let mut signatures: Vec<Signature> = vec![];
     for (i, transaction) in transactions.iter().enumerate() {
@@ -517,12 +471,7 @@ pub async fn submit_through_rpc_multiple(
 
 #[instrument(skip_all)]
 pub async fn get_token_program_id(client: &RpcClient, token_mint: &Pubkey) -> Result<Pubkey> {
-    match retry(
-        || client.get_account(token_mint),
-        3,
-    )
-    .await?
-    {
+    match retry(|| client.get_account(token_mint), 3).await? {
         account if account.owner == spl_token_2022::ID => Ok(spl_token_2022::ID),
         account if account.owner == spl_token::ID => Ok(spl_token::ID),
         _ => Err(anyhow!("Failed to get token program ID for token {}", token_mint)),

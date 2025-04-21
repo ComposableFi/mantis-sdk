@@ -225,10 +225,16 @@ async fn main() -> Result<()> {
                 )
                 .context("token_in")?;
 
-                let signature =
-                    solana::cancel_intent(&sol_client, sol_signer, program_id, args.intent_id, token_in)
-                        .await
-                        .context("Cancel intent operation failed")?;
+                let signature = solana::cancel_intent(
+                    &sol_client,
+                    sol_signer.clone(),
+                    program_id,
+                    args.intent_id,
+                    token_in,
+                    sol_signer.pubkey(),
+                )
+                .await
+                .context("Cancel intent operation failed")?;
 
                 println!("Transaction: {}", signature);
             }

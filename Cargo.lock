@@ -4658,6 +4658,8 @@ dependencies = [
  "spl-associated-token-account 6.0.0",
  "spl-token 7.0.0",
  "spl-token-2022 7.0.0",
+ "strum 0.26.3",
+ "strum_macros 0.26.4",
  "tokio",
  "tracing",
 ]
