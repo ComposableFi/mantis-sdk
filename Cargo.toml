@@ -39,7 +39,7 @@ num = "0.4.3"
 rand = "0.8.0"
 strum = { version = "0.26.2", features = ["derive"] }
 strum_macros = "0.26.4"
-tokio = { version = "1.43.0", features = ["full"] }
+tokio = { version = "1.44.2", features = ["full"] }
 tracing = "0.1.41"
 
 mantis-sdk = { path = "mantis-sdk" }
