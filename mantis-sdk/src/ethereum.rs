@@ -144,7 +144,7 @@ pub async fn solve_intent_remote<P, T>(
     token_out: Address,
     amount_out: U256,
     dst_user: Address,
-    dst_chain_id: u8,
+    src_chain_id: u8,
     tx_value: U256,
 ) -> Result<TransactionReceipt>
 where
@@ -156,7 +156,7 @@ where
     let pending = retry(
         || async {
             escrow_contract
-                .solveIntentRemote(intent_id, dst_chain_id, token_out, amount_out, dst_user)
+                .solveIntentRemote(intent_id, src_chain_id, token_out, amount_out, dst_user)
                 .value(tx_value)
                 .send()
                 .await
