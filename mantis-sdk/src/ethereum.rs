@@ -80,14 +80,16 @@ where
         .then_some(amount_in)
         .unwrap_or_default();
 
-    let receipt = approve_erc20(provider.clone(), token_in, escrow_address, amount_in).await?;
+    let tx_hash = approve_erc20(provider.clone(), token_in, escrow_address, amount_in)
+        .await?
+        .map(|receipt| receipt.transaction_hash);
 
     info!(
-        "Approved {} of token {} to {} ({})",
+        "Approved {} of token {} to {} ({:?})",
         amount_in,
         token_in.to_checksum(None),
         escrow_address.to_checksum(None),
-        receipt.transaction_hash,
+        tx_hash,
     );
 
     let intent = NewIntent {
@@ -274,12 +276,28 @@ pub async fn approve_erc20<P, T>(
     token: Address,
     spender: Address,
     amount: U256,
-) -> Result<TransactionReceipt>
+) -> Result<Option<TransactionReceipt>>
 where
     P: Provider<T, Ethereum> + Clone + WalletProvider<Ethereum>,
     T: Transport + Clone,
 {
     let token_contract = ERC20::new(token, provider.clone());
+
+    let allowance = retry(
+        || async {
+            token_contract
+                .allowance(provider.default_signer_address(), spender)
+                .call()
+                .await
+        },
+        3,
+    )
+    .await?
+    ._0;
+
+    if allowance >= amount {
+        return Ok(None);
+    }
 
     let pending = retry(
         || async { token_contract.approve(spender, amount).send().await },
@@ -302,7 +320,7 @@ where
     )
     .await?;
 
-    Ok(receipt)
+    Ok(Some(receipt))
 }
 
 #[instrument(skip_all)]
