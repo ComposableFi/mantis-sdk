@@ -72,6 +72,7 @@ where
     P: Provider<T, Ethereum> + Clone + WalletProvider<Ethereum>,
     T: Transport + Clone,
 {
+    info!("Escrow funds on Ethereum");
     let escrow_contract = Escrow::new(escrow_address, provider.clone());
 
     let intent_id = random_intent_id();
@@ -134,6 +135,14 @@ where
         10,
     )
     .await?;
+
+    info!(
+        "Escrowed {} of token {} to {} ({:?})",
+        amount_in,
+        token_in.to_checksum(None),
+        escrow_address.to_checksum(None),
+        tx_hash,
+    );
 
     Ok(receipt)
 }
