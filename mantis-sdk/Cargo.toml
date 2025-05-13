@@ -42,4 +42,4 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 url = { workspace = true }
 uuid = { workspace = true }
-auctioneer-api = { workspace = true }
+mantis-auctioneer-api = { workspace = true }

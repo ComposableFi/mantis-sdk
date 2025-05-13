@@ -1488,30 +1488,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "auctioneer-api"
-version = "0.1.0"
-source = "git+ssh://git@github.com/ComposableFi/mantis-backend.git?branch=main#edeed8e144b40517d7b792ef622c917ab00e7a8d"
-dependencies = [
- "alloy",
- "anyhow",
- "axum 0.8.4",
- "num 0.4.3",
- "regex",
- "serde",
- "serde_json",
- "solana-sdk",
- "strum 0.26.3",
- "strum_macros 0.26.4",
- "thiserror 2.0.12",
- "tracing",
- "utoipa",
- "utoipa-swagger-ui",
- "uuid",
- "validator",
- "zip",
-]
-
-[[package]]
 name = "auto_impl"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4858,6 +4834,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "mantis-auctioneer-api"
+version = "0.1.0"
+dependencies = [
+ "alloy",
+ "anyhow",
+ "axum 0.8.4",
+ "num 0.4.3",
+ "regex",
+ "serde",
+ "serde_json",
+ "solana-sdk",
+ "strum 0.26.3",
+ "strum_macros 0.26.4",
+ "thiserror 2.0.12",
+ "tracing",
+ "utoipa",
+ "utoipa-swagger-ui",
+ "uuid",
+ "validator",
+ "zip",
+]
+
+[[package]]
 name = "mantis-cli"
 version = "0.1.0"
 dependencies = [
@@ -4898,10 +4897,10 @@ dependencies = [
  "anchor-lang",
  "anchor-spl",
  "anyhow",
- "auctioneer-api",
  "base64 0.22.1",
  "chrono",
  "futures 0.3.31",
+ "mantis-auctioneer-api",
  "num 0.4.3",
  "rand 0.8.5",
  "reqwest 0.12.15",
