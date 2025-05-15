@@ -44,3 +44,6 @@ tracing-subscriber = { workspace = true }
 url = { workspace = true }
 uuid = { workspace = true }
 auctioneer-api = { workspace = true }
+
+[dev-dependencies]
+tracing-test = "0.2.5"

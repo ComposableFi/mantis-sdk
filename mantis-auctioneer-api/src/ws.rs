@@ -10,7 +10,7 @@ use solana_sdk::pubkey::Pubkey;
 use uuid::Uuid;
 use validator::{Validate, ValidationError};
 
-use crate::IntentChain;
+pub use crate::IntentChain;
 
 pub trait SignableMessage {
     fn signature(&self) -> &Option<String>;
