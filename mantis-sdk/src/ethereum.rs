@@ -6,7 +6,7 @@ use alloy::sol;
 use alloy::transports::Transport;
 use anyhow::{anyhow, Context, Error, Result};
 use chrono::Utc;
-use strum::FromRepr;
+use strum::{Display, EnumString, FromRepr};
 use tracing::{info, instrument};
 use Escrow::NewIntent;
 
@@ -28,8 +28,9 @@ sol!(
 
 pub const ETH_TOKEN_ADDRESS: Address = address!("0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE");
 
-#[derive(Debug, FromRepr, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, FromRepr, Clone, Copy, PartialEq, Eq, Display, EnumString)]
 #[repr(u64)]
+#[strum(serialize_all = "lowercase")]
 pub enum EvmChainId {
     Ethereum = 1,
     Base = 8453,
