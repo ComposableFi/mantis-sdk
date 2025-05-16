@@ -7,6 +7,7 @@ use alloy::transports::Transport;
 use anyhow::{anyhow, Context, Error, Result};
 use chrono::Utc;
 use strum::{Display, EnumString, FromRepr};
+use thiserror::Error;
 use tracing::{info, instrument};
 use Escrow::NewIntent;
 
@@ -48,6 +49,21 @@ impl TryFrom<u64> for EvmChainId {
     fn try_from(id: u64) -> Result<Self, Self::Error> {
         EvmChainId::from_repr(id).context("invalid intent chain id")
     }
+}
+
+#[derive(Error, Debug)]
+pub enum EthereumError {
+    #[error("Transaction receipt not found for transaction: {tx_hash}")]
+    TransactionReceiptNotFound { tx_hash: String },
+    
+    #[error("Provider error: {0}")]
+    ProviderError(String),
+    
+    #[error("Contract error: {0}")]
+    ContractError(String),
+    
+    #[error("{0}")]
+    Anyhow(#[from] anyhow::Error),
 }
 
 #[derive(Default, Debug, Clone)]
@@ -158,7 +174,7 @@ pub async fn solve_intent_remote<P, T>(
     dst_user: Address,
     src_chain_id: u8,
     tx_value: U256,
-) -> Result<TransactionReceipt>
+) -> Result<TransactionReceipt, EthereumError>
 where
     P: Provider<T, Ethereum> + Clone + WalletProvider<Ethereum>,
     T: Transport + Clone,
@@ -175,7 +191,8 @@ where
         },
         3,
     )
-    .await?;
+    .await
+    .map_err(|e| EthereumError::Anyhow(e.into()))?;
 
     let tx_hash = pending.tx_hash();
 
@@ -186,10 +203,14 @@ where
 
     let receipt = retry(
         || async {
-            provider
-                .get_transaction_receipt(*tx_hash)
-                .await?
-                .ok_or(anyhow!("No transaction receipt"))
+            let receipt_result = provider.get_transaction_receipt(*tx_hash).await;
+            match receipt_result {
+                Ok(Some(receipt)) => Ok(receipt),
+                Ok(None) => Err(EthereumError::TransactionReceiptNotFound { 
+                    tx_hash: tx_hash.to_string() 
+                }),
+                Err(e) => Err(EthereumError::Anyhow(e.into())),
+            }
         },
         10,
     )
@@ -204,7 +225,7 @@ pub async fn solve_intent_local<P, T>(
     escrow_address: Address,
     intent_id: u64,
     tx_value: U256,
-) -> Result<TransactionReceipt>
+) -> Result<TransactionReceipt, EthereumError>
 where
     P: Provider<T, Ethereum> + Clone + WalletProvider<Ethereum>,
     T: Transport + Clone,
@@ -221,7 +242,8 @@ where
         },
         3,
     )
-    .await?;
+    .await
+    .map_err(|e| EthereumError::Anyhow(e.into()))?;
 
     let tx_hash = pending.tx_hash();
 
@@ -232,10 +254,14 @@ where
 
     let receipt = retry(
         || async {
-            provider
-                .get_transaction_receipt(*tx_hash)
-                .await?
-                .ok_or(anyhow!("No transaction receipt"))
+            let receipt_result = provider.get_transaction_receipt(*tx_hash).await;
+            match receipt_result {
+                Ok(Some(receipt)) => Ok(receipt),
+                Ok(None) => Err(EthereumError::TransactionReceiptNotFound { 
+                    tx_hash: tx_hash.to_string() 
+                }),
+                Err(e) => Err(EthereumError::Anyhow(e.into())),
+            }
         },
         10,
     )
@@ -249,14 +275,19 @@ pub async fn cancel_intent<P, T>(
     provider: P,
     escrow_address: Address,
     intent_id: u64,
-) -> Result<TransactionReceipt>
+) -> Result<TransactionReceipt, EthereumError>
 where
     P: Provider<T, Ethereum> + Clone + WalletProvider<Ethereum>,
     T: Transport + Clone,
 {
     let contract = Escrow::new(escrow_address, provider.clone());
 
-    let pending = retry(|| async { contract.cancelIntent(intent_id).send().await }, 3).await?;
+    let pending = retry(
+        || async { contract.cancelIntent(intent_id).send().await }, 
+        3
+    )
+    .await
+    .map_err(|e| EthereumError::Anyhow(e.into()))?;
 
     let tx_hash = pending.tx_hash();
 
@@ -267,10 +298,14 @@ where
 
     let receipt = retry(
         || async {
-            provider
-                .get_transaction_receipt(*tx_hash)
-                .await?
-                .ok_or(anyhow!("No transaction receipt"))
+            let receipt_result = provider.get_transaction_receipt(*tx_hash).await;
+            match receipt_result {
+                Ok(Some(receipt)) => Ok(receipt),
+                Ok(None) => Err(EthereumError::TransactionReceiptNotFound { 
+                    tx_hash: tx_hash.to_string() 
+                }),
+                Err(e) => Err(EthereumError::Anyhow(e.into())),
+            }
         },
         10,
     )
@@ -342,7 +377,7 @@ pub async fn send_transaction<P, T>(
     gas: u64,
     gas_fees: GasFees,
     value: U256,
-) -> Result<TransactionReceipt>
+) -> Result<TransactionReceipt, EthereumError>
 where
     P: Provider<T, Ethereum> + Clone + WalletProvider<Ethereum>,
     T: Transport + Clone,
@@ -363,17 +398,27 @@ where
         ..Default::default()
     };
 
-    let pending = retry(|| provider.send_transaction(transaction.clone()), 3).await?;
+    let pending = retry(
+        || provider.send_transaction(transaction.clone()), 
+        3
+    )
+    .await
+    .map_err(|e| EthereumError::Anyhow(e.into()))?;
+    
     let tx_hash = pending.tx_hash();
 
     info!("Ethereum transaction {} was sent to the network", tx_hash);
 
     let receipt = retry(
         || async {
-            provider
-                .get_transaction_receipt(*tx_hash)
-                .await?
-                .ok_or(anyhow!("No transaction receipt"))
+            let receipt_result = provider.get_transaction_receipt(*tx_hash).await;
+            match receipt_result {
+                Ok(Some(receipt)) => Ok(receipt),
+                Ok(None) => Err(EthereumError::TransactionReceiptNotFound { 
+                    tx_hash: tx_hash.to_string() 
+                }),
+                Err(e) => Err(EthereumError::Anyhow(e.into())),
+            }
         },
         10,
     )
