@@ -418,6 +418,74 @@ async fn test_http_client_with_retry_success() {
 
 #[tokio::test]
 #[traced_test]
+async fn test_http_client_with_retry_exhaustion() {
+    let mock_server = MockHttpAuctioneer::new().await.unwrap();
+
+    let server_config = mock_server.config();
+    server_config.request_counter.store(0, Ordering::SeqCst);
+
+    let behaviors = vec![
+        EndpointBehavior::InternalServerError,
+        EndpointBehavior::InternalServerError,
+        EndpointBehavior::InternalServerError,
+        EndpointBehavior::InternalServerError,
+    ];
+
+    server_config
+        .add_endpoint(EndpointConfig::with_sequence("/api/v1/intents", behaviors))
+        .await;
+
+    let max_retries = 2; // We'll try initial request + 2 retries
+    let client = AuctioneerHttpClient::new(
+        &mock_server.base_url(),
+        Some(HttpClientConfig {
+            request_timeout: Duration::from_secs(5),
+            max_retries,
+            authority_env_var: "TEST_MANTIS_ADMIN_KEY".to_string(),
+            retry_base_delay: Duration::from_millis(50), // Fast retry for tests
+            api_version: "v1".to_string(),
+        }),
+    )
+    .unwrap();
+
+    let query = ListSwapIntentsQuery {
+        src_chain: None,
+        period: None,
+        src_user: vec![],
+        page: None,
+        page_size: None,
+    };
+
+    let result = client.list_swap_intents(query).await;
+
+    // Sleep a bit to make sure all requests are counted
+    tokio::time::sleep(Duration::from_millis(100)).await;
+
+    let request_count = server_config.get_request_count();
+    println!("Final request count in exhaustion test: {}", request_count);
+
+    assert!(result.is_err(), "Expected error after retries are exhausted");
+
+    let err = result.unwrap_err();
+    let err_str = err.to_string();
+    assert!(
+        err_str.contains("Server responded with 500"),
+        "Expected server error message, but got: {}",
+        err_str
+    );
+
+    assert_eq!(
+        request_count,
+        (max_retries + 1) as u64,
+        "Expected exactly {} requests (initial + {} retries), but got {}",
+        max_retries + 1,
+        max_retries,
+        request_count
+    );
+}
+
+#[tokio::test]
+#[traced_test]
 async fn test_http_client_with_global_delay() {
     let mock_server = MockHttpAuctioneer::new().await.unwrap();
 
