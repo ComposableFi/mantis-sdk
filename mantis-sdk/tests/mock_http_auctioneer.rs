@@ -91,6 +91,8 @@ pub struct MockServerConfig {
     pub global_delay: Arc<Mutex<Option<Duration>>>,
     pub global_delay_applied: Arc<AtomicBool>,
     pub unresponsive: Arc<AtomicBool>,
+    pub received_authority_key: Arc<Mutex<Option<String>>>,
+    pub expected_authority_key: Arc<Mutex<Option<String>>>,
 }
 
 impl MockServerConfig {
@@ -101,7 +103,19 @@ impl MockServerConfig {
             global_delay: Arc::new(Mutex::new(None)),
             global_delay_applied: Arc::new(AtomicBool::new(false)),
             unresponsive: Arc::new(AtomicBool::new(false)),
+            received_authority_key: Arc::new(Mutex::new(None)),
+            expected_authority_key: Arc::new(Mutex::new(None)),
         }
+    }
+
+    pub async fn set_expected_authority_key(&self, key: Option<String>) {
+        let mut expected = self.expected_authority_key.lock().await;
+        *expected = key;
+    }
+
+    pub async fn get_received_authority_key(&self) -> Option<String> {
+        let received = self.received_authority_key.lock().await;
+        received.clone()
     }
 
     pub fn was_global_delay_applied(&self) -> bool {
@@ -236,6 +250,36 @@ async fn handle_request(req: Request<Body>, config: MockServerConfig) -> Result<
         return Ok(Response::new(Body::empty()));
     }
 
+    // Extract authority key from query parameters if it exists
+    if let Some(query) = req.uri().query() {
+        let query_pairs: Vec<(String, String)> = url::form_urlencoded::parse(query.as_bytes())
+            .map(|(k, v)| (k.to_string(), v.to_string()))
+            .collect();
+
+        if let Some((_, auth_value)) = query_pairs.iter().find(|(k, _)| k == "authority") {
+            let mut received = config.received_authority_key.lock().await;
+            *received = Some(auth_value.clone());
+            tracing::info!("Received authority key: {}", auth_value);
+
+            // If there's an expected key set, verify it matches
+            let expected_opt = config.expected_authority_key.lock().await;
+            if let Some(expected) = expected_opt.as_ref() {
+                if auth_value != expected {
+                    tracing::info!(
+                        "Authority key mismatch: expected '{}', got '{}'",
+                        expected,
+                        auth_value
+                    );
+                    return Ok(Response::builder()
+                        .status(StatusCode::UNAUTHORIZED)
+                        .body(Body::from("Invalid authority key"))
+                        .unwrap());
+                }
+                tracing::info!("Authority key matched expected value");
+            }
+        }
+    }
+
     // Apply global delay if any - do this before any other processing
     {
         // Use a separate scope for the mutex lock
@@ -347,10 +391,14 @@ fn generate_mock_response(path: &str) -> Response<Body> {
             total_value_out: vec![990.0],
             total_fees: vec![10.0],
         }),
-        "/api/v1/fees" => json_response(&auctioneer_api::http::ListFeesResponse {
-            solana: vec![],
-            ethereum: vec![],
-        }),
+        "/api/v1/fees" => {
+            // This is an admin endpoint, so we should check for authority key
+            // The actual checking happens in handle_request
+            json_response(&auctioneer_api::http::ListFeesResponse {
+                solana: vec![],
+                ethereum: vec![],
+            })
+        }
         _ if path.starts_with("/api/v1/intents/") => {
             let id_str = path.trim_start_matches("/api/v1/intents/");
             let id = id_str.parse::<u64>().unwrap_or(123);

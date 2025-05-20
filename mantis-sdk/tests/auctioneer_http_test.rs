@@ -67,6 +67,11 @@ async fn test_auth_key_included_when_env_set() {
 
     let mock_server = MockHttpAuctioneer::new().await.unwrap();
 
+    let server_config = mock_server.config();
+    server_config
+        .set_expected_authority_key(Some(key_value.to_string()))
+        .await;
+
     let client = AuctioneerHttpClient::new(
         &mock_server.base_url(),
         Some(HttpClientConfig {
@@ -79,13 +84,88 @@ async fn test_auth_key_included_when_env_set() {
     )
     .unwrap();
 
-    // Test auth succeeds when env var is set
     let result = client.list_fees().await;
 
     println!("Auth with env var set result: {:?}", result);
     assert!(result.is_ok(), "Expected auth to succeed when env var is set");
 
+    let received_key = server_config.get_received_authority_key().await;
+    assert!(
+        received_key.is_some(),
+        "Server should have received an authority key"
+    );
+    assert_eq!(
+        received_key.unwrap(),
+        key_value,
+        "Server received incorrect authority key"
+    );
+
     env::remove_var("TEST_MANTIS_ADMIN_KEY");
+}
+
+#[tokio::test]
+#[traced_test]
+async fn test_auth_key_rejection_with_wrong_key() {
+    let env_var_name = "TEST_MANTIS_ADMIN_KEY_WRONG_TEST";
+    env::remove_var(env_var_name);
+
+    let correct_key = "correct_auth_key";
+    let wrong_key = "wrong_auth_key";
+
+    // Set incorrect key in environment
+    env::set_var(env_var_name, wrong_key);
+
+    let auth_key_result = env::var(env_var_name);
+    assert!(auth_key_result.is_ok());
+    assert_eq!(auth_key_result.unwrap(), wrong_key);
+
+    let mock_server = MockHttpAuctioneer::new().await.unwrap();
+
+    // Set the expected authority key in the mock server (different from env)
+    let server_config = mock_server.config();
+    server_config
+        .set_expected_authority_key(Some(correct_key.to_string()))
+        .await;
+
+    let client = AuctioneerHttpClient::new(
+        &mock_server.base_url(),
+        Some(HttpClientConfig {
+            request_timeout: Duration::from_secs(5),
+            max_retries: 0,
+            authority_env_var: env_var_name.to_string(),
+            retry_base_delay: Duration::from_millis(100),
+            api_version: "v1".to_string(),
+        }),
+    )
+    .unwrap();
+
+    let result = client.list_fees().await;
+
+    println!("Auth with wrong key result: {:?}", result);
+    assert!(result.is_err(), "Expected auth to fail with wrong key");
+
+    // Check error type and message
+    let err = result.unwrap_err();
+    let err_str = err.to_string();
+    assert!(
+        err_str.contains("Unauthorized"),
+        "Expected error to contain 'Unauthorized', got: {}",
+        err_str
+    );
+
+    // Check that the server received the wrong authority key
+    let received_key = server_config.get_received_authority_key().await;
+    assert!(
+        received_key.is_some(),
+        "Server should have received an authority key"
+    );
+    assert_eq!(
+        received_key.unwrap(),
+        wrong_key,
+        "Server received unexpected authority key"
+    );
+
+    env::remove_var(env_var_name);
 }
 
 #[tokio::test]
