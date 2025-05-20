@@ -108,7 +108,8 @@ pub async fn escrow_funds(
 ) -> Result<Signature, SolanaError> {
     let cluster = Cluster::Custom(client.url(), String::default());
     let client_anchor = Client::new_with_options(cluster, payer.clone(), CommitmentConfig::processed());
-    let program = client_anchor.program(program_id)
+    let program = client_anchor
+        .program(program_id)
         .map_err(|e| SolanaError::AnchorClientError(e.to_string()))?;
 
     let src_user = payer.pubkey();
@@ -140,7 +141,8 @@ pub async fn escrow_funds(
             .await
             .map_err(SolanaError::Anyhow)?;
 
-    let amount_in_u64 = amount_in.try_into()
+    let amount_in_u64 = amount_in
+        .try_into()
         .map_err(|e| SolanaError::ConversionError(format!("Failed to convert amount_in to u64: {}", e)))?;
 
     let new_intent = types::NewIntent {
@@ -187,7 +189,9 @@ pub async fn escrow_funds(
         .accounts(escrow_accounts)
         .args(escrow_args)
         .instructions()
-        .map_err(|e| SolanaError::TransactionBuildError(format!("Failed to build escrow instructions: {}", e)))?;
+        .map_err(|e| {
+            SolanaError::TransactionBuildError(format!("Failed to build escrow instructions: {}", e))
+        })?;
 
     let recent_blockhash = retry(|| client.get_latest_blockhash(), 3)
         .await
@@ -204,7 +208,7 @@ pub async fn escrow_funds(
         .await
         .map_err(|e| SolanaError::TransactionFailed {
             signature: "unknown".to_string(),
-            reason: format!("Failed to send and confirm transaction: {}", e)
+            reason: format!("Failed to send and confirm transaction: {}", e),
         })?;
 
     Ok(signature)
@@ -221,7 +225,8 @@ pub async fn cancel_intent(
 ) -> Result<Signature, SolanaError> {
     let cluster = Cluster::Custom(client.url(), String::default());
     let client_anchor = Client::new_with_options(cluster, payer.clone(), CommitmentConfig::confirmed());
-    let program = client_anchor.program(program_id)
+    let program = client_anchor
+        .program(program_id)
         .map_err(|e| SolanaError::AnchorClientError(e.to_string()))?;
 
     if token_in == Pubkey::default() {
@@ -272,7 +277,9 @@ pub async fn cancel_intent(
         .accounts(cancel_accounts)
         .args(cancel_args)
         .instructions()
-        .map_err(|e| SolanaError::TransactionBuildError(format!("Failed to build cancel intent instructions: {}", e)))?;
+        .map_err(|e| {
+            SolanaError::TransactionBuildError(format!("Failed to build cancel intent instructions: {}", e))
+        })?;
 
     let recent_blockhash = retry(|| client.get_latest_blockhash(), 3)
         .await
@@ -289,9 +296,9 @@ pub async fn cancel_intent(
         .await
         .map_err(|e| SolanaError::TransactionFailed {
             signature: "unknown".to_string(),
-            reason: format!("Failed to cancel intent {}: {}", intent_id, e)
+            reason: format!("Failed to cancel intent {}: {}", intent_id, e),
         })?;
-        
+
     Ok(signature)
 }
 
@@ -537,14 +544,14 @@ pub async fn submit_through_rpc_multiple(
 pub async fn get_token_program_id(client: &RpcClient, token_mint: &Pubkey) -> Result<Pubkey, SolanaError> {
     match retry(|| client.get_account(token_mint), 3)
         .await
-        .map_err(|_| SolanaError::AccountNotFound { 
-            account_pubkey: token_mint.to_string() 
+        .map_err(|_| SolanaError::AccountNotFound {
+            account_pubkey: token_mint.to_string(),
         })? {
         account if account.owner == spl_token_2022::ID => Ok(spl_token_2022::ID),
         account if account.owner == spl_token::ID => Ok(spl_token::ID),
-        _ => Err(SolanaError::TokenOperationError { 
-            mint_pubkey: token_mint.to_string(), 
-            details: format!("Could not determine token program ID for mint {}", token_mint)
+        _ => Err(SolanaError::TokenOperationError {
+            mint_pubkey: token_mint.to_string(),
+            details: format!("Could not determine token program ID for mint {}", token_mint),
         }),
     }
 }

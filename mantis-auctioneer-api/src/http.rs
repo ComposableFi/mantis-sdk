@@ -47,7 +47,7 @@ fn validate_token_in(token_in: &str) -> Result<(), ValidationError> {
     let pubkey_result = Pubkey::from_str(token_in);
 
     if address_result.is_err() && pubkey_result.is_err() {
-        return Err(ValidationError::new("token_in is not a valid token address"))
+        return Err(ValidationError::new("token_in is not a valid token address"));
     }
     Ok(())
 }
@@ -57,7 +57,7 @@ fn validate_token_out(token_out: &str) -> Result<(), ValidationError> {
     let pubkey_result = Pubkey::from_str(token_out);
 
     if address_result.is_err() && pubkey_result.is_err() {
-        return Err(ValidationError::new("token_out is not a valid token address"))
+        return Err(ValidationError::new("token_out is not a valid token address"));
     }
     Ok(())
 }
