@@ -75,7 +75,7 @@ impl EndpointConfig {
             path: path.to_string(),
         }
     }
-    
+
     pub fn with_sequence(path: &str, behaviors: Vec<EndpointBehavior>) -> Self {
         Self {
             behavior: behaviors.into(),
@@ -271,16 +271,14 @@ async fn handle_request(req: Request<Body>, config: MockServerConfig) -> Result<
                 sleep(Duration::from_secs(10)).await;
                 Ok(Response::new(Body::empty()))
             }
-            EndpointBehavior::InternalServerError => 
-                Ok(Response::builder()
-                    .status(StatusCode::INTERNAL_SERVER_ERROR)
-                    .body(Body::from("Internal Server Error"))
-                    .unwrap()),
-            EndpointBehavior::Unauthorized => 
-                Ok(Response::builder()
-                    .status(StatusCode::UNAUTHORIZED)
-                    .body(Body::from("Unauthorized"))
-                    .unwrap()),
+            EndpointBehavior::InternalServerError => Ok(Response::builder()
+                .status(StatusCode::INTERNAL_SERVER_ERROR)
+                .body(Body::from("Internal Server Error"))
+                .unwrap()),
+            EndpointBehavior::Unauthorized => Ok(Response::builder()
+                .status(StatusCode::UNAUTHORIZED)
+                .body(Body::from("Unauthorized"))
+                .unwrap()),
             EndpointBehavior::MalformedJson => Ok(Response::builder()
                 .status(StatusCode::OK)
                 .header(CONTENT_TYPE, HeaderValue::from_static("application/json"))

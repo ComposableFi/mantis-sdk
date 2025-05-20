@@ -43,11 +43,12 @@ async fn test_auth_failure_when_env_not_set() {
 
     assert!(result.is_err(), "Expected auth failure but got success");
 
-    let error = result.unwrap_err().to_string();
+    let err = result.unwrap_err();
+    let err_str = err.to_string();
     assert!(
-        error.contains("Authority key not found"),
+        err_str.contains("Authority key not found"),
         "Expected 'Authority key not found' error but got: {}",
-        error
+        err_str
     );
 }
 
@@ -214,9 +215,13 @@ async fn test_http_client_with_timeout() {
 
     let result = client.list_swap_intents(query).await;
     assert!(result.is_err(), "Expected timeout error");
+
+    let err = result.unwrap_err();
+    let err_str = err.to_string();
     assert!(
-        result.unwrap_err().to_string().contains("timed out"),
-        "Expected timeout error message"
+        err_str.contains("timed out") || err_str.contains("Request timed out"),
+        "Expected timeout error message, but got: {}",
+        err_str
     );
 }
 
@@ -256,9 +261,13 @@ async fn test_http_client_with_unauthorized_response() {
 
     let result = client.list_swap_intents(query).await;
     assert!(result.is_err(), "Expected unauthorized error");
+
+    let err = result.unwrap_err();
+    let err_str = err.to_string();
     assert!(
-        result.unwrap_err().to_string().contains("Unauthorized"),
-        "Expected unauthorized error message"
+        err_str.contains("Unauthorized"),
+        "Expected unauthorized error message, but got: {}",
+        err_str
     );
 }
 
@@ -298,9 +307,13 @@ async fn test_http_client_with_server_error() {
 
     let result = client.list_swap_intents(query).await;
     assert!(result.is_err(), "Expected server error");
+
+    let err = result.unwrap_err();
+    let err_str = err.to_string();
     assert!(
-        result.unwrap_err().to_string().contains("HTTP 500"),
-        "Expected 500 error message"
+        err_str.contains("Server responded with 500"),
+        "Expected error message about 500 status code, but got: {}",
+        err_str
     );
 }
 
@@ -340,12 +353,13 @@ async fn test_http_client_with_malformed_json_response() {
 
     let result = client.list_swap_intents(query).await;
     assert!(result.is_err(), "Expected parsing error");
+
+    let err = result.unwrap_err();
+    let err_str = err.to_string();
     assert!(
-        result
-            .unwrap_err()
-            .to_string()
-            .contains("Failed to parse response"),
-        "Expected parsing error message"
+        err_str.contains("Failed to parse response"),
+        "Expected parsing error message, but got: {}",
+        err_str
     );
 }
 
@@ -484,9 +498,13 @@ async fn test_http_client_with_unresponsive_server() {
 
     let result = client.list_swap_intents(query).await;
     assert!(result.is_err(), "Expected timeout due to unresponsive server");
+
+    let err = result.unwrap_err();
+    let err_str = err.to_string();
     assert!(
-        result.unwrap_err().to_string().contains("timed out"),
-        "Expected timeout error message"
+        err_str.contains("timed out") || err_str.contains("Request timed out"),
+        "Expected timeout error message, but got: {}",
+        err_str
     );
 }
 

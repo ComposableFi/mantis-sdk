@@ -1,4 +1,3 @@
-use anyhow::{anyhow, Context, Result};
 use auctioneer_api::http::{
     CancelQuery, CancelResponse, CheckHealthResponse, GetStatsQuery, GetStatsResponse, GetSwapIntentResponse,
     GetTimeSeriesQuery, GetTimeSeriesResponse, ListFeesQuery, ListFeesResponse, ListQuotesQuery,
@@ -12,6 +11,42 @@ use std::env;
 use std::time::Duration;
 use tracing::error;
 use url::Url;
+
+#[derive(Debug, thiserror::Error)]
+pub enum AuctioneerHttpError {
+    #[error("Invalid URL: {0}")]
+    UrlError(#[from] url::ParseError),
+
+    #[error("HTTP client build error: {0}")]
+    ClientBuildError(String),
+
+    #[error("Unauthorized: {0}")]
+    Unauthorized(String),
+
+    #[error("Authentication error: {0}")]
+    AuthError(#[from] AuthError),
+
+    #[error("Request timed out after {retries} retries")]
+    Timeout { retries: u32 },
+
+    #[error("Rate limited by the server")]
+    RateLimited,
+
+    #[error("Server responded with {status}: {message}")]
+    ServerError { status: u16, message: String },
+
+    #[error("Failed to parse response: {0}")]
+    ParseError(String),
+
+    #[error("Request failed: {0}")]
+    RequestFailed(String),
+
+    #[error("JSON serialization error: {0}")]
+    SerializationError(#[from] serde_json::Error),
+
+    #[error("Reqwest error: {0}")]
+    ReqwestError(#[from] reqwest::Error),
+}
 
 #[derive(Debug, Clone)]
 pub struct HttpClientConfig {
@@ -50,15 +85,17 @@ pub enum AuthError {
     ServerError(String),
 }
 
+pub type Result<T> = std::result::Result<T, AuctioneerHttpError>;
+
 impl AuctioneerHttpClient {
     pub fn new(base_url: &str, config: Option<HttpClientConfig>) -> Result<Self> {
-        let base_url = Url::parse(base_url).context("Invalid auctioneer HTTP URL")?;
+        let base_url = Url::parse(base_url)?;
         let config = config.unwrap_or_default();
 
         let client = Client::builder()
             .timeout(config.request_timeout)
             .build()
-            .context("Failed to build HTTP client")?;
+            .map_err(|e| AuctioneerHttpError::ClientBuildError(e.to_string()))?;
 
         Ok(Self {
             base_url,
@@ -67,22 +104,21 @@ impl AuctioneerHttpClient {
         })
     }
 
-    fn get_authority_key(&self) -> Result<String, AuthError> {
+    fn get_authority_key(&self) -> std::result::Result<String, AuthError> {
         env::var(&self.config.authority_env_var).map_err(|_| AuthError::MissingAuthorityKey)
     }
 
     pub(crate) fn add_authority_to_query<T: Serialize + for<'de> Deserialize<'de>>(
         &self,
         query: T,
-    ) -> Result<T, AuthError> {
-        let serialized = serde_json::to_value(&query).map_err(|e| AuthError::ServerError(e.to_string()))?;
+    ) -> Result<T> {
+        let serialized = serde_json::to_value(&query)?;
         let mut deserialized = serialized.as_object().cloned().unwrap_or_default();
         deserialized.insert(
             "authority".to_string(),
-            serde_json::Value::String(self.get_authority_key()?),
+            serde_json::Value::String(self.get_authority_key().map_err(AuctioneerHttpError::AuthError)?),
         );
-        serde_json::from_value(serde_json::Value::Object(deserialized))
-            .map_err(|e| AuthError::ServerError(e.to_string()))
+        Ok(serde_json::from_value(serde_json::Value::Object(deserialized))?)
     }
 
     async fn request<T: DeserializeOwned, Q: Serialize>(
@@ -98,7 +134,7 @@ impl AuctioneerHttpClient {
         loop {
             // Create a fresh request for each attempt to avoid cloning issues
             let mut request = self.client.request(method.clone(), url.clone());
-            
+
             if let Some(q) = &query {
                 request = request.query(q);
             }
@@ -111,16 +147,27 @@ impl AuctioneerHttpClient {
                             Ok(parsed) => return Ok(parsed),
                             Err(e) => {
                                 if retries >= self.config.max_retries {
-                                    return Err(anyhow!("Failed to parse response: {}", e));
+                                    return Err(AuctioneerHttpError::ParseError(e.to_string()));
                                 }
-                                error!("Failed to parse response (retry {}/{}): {}", 
-                                    retries + 1, self.config.max_retries, e);
+                                error!(
+                                    "Failed to parse response (retry {}/{}): {}",
+                                    retries + 1,
+                                    self.config.max_retries,
+                                    e
+                                );
                             }
                         }
                     }
                     StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN => {
-                        println!("Detected unauthorized response");
-                        return Err(anyhow!("Unauthorized"));
+                        return Err(AuctioneerHttpError::Unauthorized(
+                            "Invalid credentials or insufficient permissions".to_string(),
+                        ));
+                    }
+                    StatusCode::TOO_MANY_REQUESTS => {
+                        if retries >= self.config.max_retries {
+                            return Err(AuctioneerHttpError::RateLimited);
+                        }
+                        error!("Rate limited (retry {}/{})", retries + 1, self.config.max_retries);
                     }
                     s => {
                         let error_text = response
@@ -128,10 +175,10 @@ impl AuctioneerHttpClient {
                             .await
                             .unwrap_or_else(|_| "Unknown error".to_string());
                         if retries >= self.config.max_retries {
-                            return Err(anyhow!(AuthError::ServerError(format!(
-                                "HTTP {} on {}: {}",
-                                s, url, error_text
-                            ))));
+                            return Err(AuctioneerHttpError::ServerError {
+                                status: s.as_u16(),
+                                message: format!("HTTP error on {}: {}", url, error_text),
+                            });
                         }
 
                         error!(
@@ -148,9 +195,12 @@ impl AuctioneerHttpClient {
                     if retries >= self.config.max_retries {
                         // Check if it's a timeout error and provide a specific message
                         if e.is_timeout() {
-                            return Err(anyhow!("Request timed out"));
+                            return Err(AuctioneerHttpError::Timeout { retries });
                         }
-                        return Err(anyhow!("HTTP request failed after {} retries: {}", retries, e));
+                        return Err(AuctioneerHttpError::RequestFailed(format!(
+                            "Failed after {} retries: {}",
+                            retries, e
+                        )));
                     }
                     error!(
                         "HTTP request failed (retry {}/{}): {}",
@@ -182,7 +232,8 @@ impl AuctioneerHttpClient {
 
     pub async fn list_swap_intents(&self, _query: ListSwapIntentsQuery) -> Result<ListSwapIntentsResponse> {
         // We're not using the query in tests to avoid serialization issues
-        self.request::<ListSwapIntentsResponse, ()>(reqwest::Method::GET, "/intents", None).await
+        self.request::<ListSwapIntentsResponse, ()>(reqwest::Method::GET, "/intents", None)
+            .await
     }
 
     pub async fn get_swap_intent(&self, intent_id: u64) -> Result<GetSwapIntentResponse> {
