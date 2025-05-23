@@ -106,6 +106,14 @@ impl AuctioneerHttpClient {
         })
     }
 
+    pub fn build(base_url: &str) -> Result<Self> {
+        Self::new(base_url, None)
+    }
+
+    pub fn build_with_config(base_url: &str, config: HttpClientConfig) -> Result<Self> {
+        Self::new(base_url, Some(config))
+    }
+
     fn get_auth_token(&self) -> std::result::Result<String, AuthError> {
         // First check if token is provided in config
         if let Some(token) = &self.config.admin_token {
