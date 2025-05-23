@@ -6,7 +6,7 @@ use auctioneer_api::http::{
 };
 use auctioneer_api::IntentChain;
 use reqwest::{Client, StatusCode};
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Serialize};
 use std::env;
 use std::time::Duration;
 use tracing::error;
@@ -52,7 +52,8 @@ pub enum AuctioneerHttpError {
 pub struct HttpClientConfig {
     pub request_timeout: Duration,
     pub max_retries: u32,
-    pub authority_env_var: String,
+    pub admin_token: Option<String>,
+    pub admin_token_env_var: String,
     pub retry_base_delay: Duration,
     pub api_version: String,
 }
@@ -62,9 +63,10 @@ impl Default for HttpClientConfig {
         Self {
             request_timeout: Duration::from_secs(30),
             max_retries: 3,
-            authority_env_var: "MANTIS_ADMIN_AUTHORITY_KEY".to_string(),
+            admin_token: None,
+            admin_token_env_var: "ADMIN_TOKEN".to_string(),
             retry_base_delay: Duration::from_secs(1),
-            api_version: "v1".to_string(),
+            api_version: auctioneer_api::API_VERSION.to_string(),
         }
     }
 }
@@ -77,9 +79,9 @@ pub struct AuctioneerHttpClient {
 
 #[derive(Debug, thiserror::Error)]
 pub enum AuthError {
-    #[error("Authority key not found in environment")]
+    #[error("Admin token not found in environment")]
     MissingAuthorityKey,
-    #[error("Unauthorized: Invalid authority key")]
+    #[error("Unauthorized: Invalid admin token")]
     Unauthorized,
     #[error("Server error: {0}")]
     ServerError(String),
@@ -104,21 +106,14 @@ impl AuctioneerHttpClient {
         })
     }
 
-    fn get_authority_key(&self) -> std::result::Result<String, AuthError> {
-        env::var(&self.config.authority_env_var).map_err(|_| AuthError::MissingAuthorityKey)
-    }
+    fn get_auth_token(&self) -> std::result::Result<String, AuthError> {
+        // First check if token is provided in config
+        if let Some(token) = &self.config.admin_token {
+            return Ok(token.clone());
+        }
 
-    pub(crate) fn add_authority_to_query<T: Serialize + for<'de> Deserialize<'de>>(
-        &self,
-        query: T,
-    ) -> Result<T> {
-        let serialized = serde_json::to_value(&query)?;
-        let mut deserialized = serialized.as_object().cloned().unwrap_or_default();
-        deserialized.insert(
-            "authority".to_string(),
-            serde_json::Value::String(self.get_authority_key().map_err(AuctioneerHttpError::AuthError)?),
-        );
-        Ok(serde_json::from_value(serde_json::Value::Object(deserialized))?)
+        // Fallback to environment variable
+        env::var(&self.config.admin_token_env_var).map_err(|_| AuthError::MissingAuthorityKey)
     }
 
     async fn request<T: DeserializeOwned, Q: Serialize>(
@@ -126,6 +121,7 @@ impl AuctioneerHttpClient {
         method: reqwest::Method,
         path: &str,
         query: Option<Q>,
+        require_auth: bool,
     ) -> Result<T> {
         let api_path = format!("/api/{}{}", self.config.api_version, path);
         let url = self.base_url.join(&api_path)?;
@@ -137,6 +133,11 @@ impl AuctioneerHttpClient {
 
             if let Some(q) = &query {
                 request = request.query(q);
+            }
+
+            if require_auth {
+                let token = self.get_auth_token().map_err(AuctioneerHttpError::AuthError)?;
+                request = request.header("Authorization", format!("Bearer {}", token));
             }
 
             match request.send().await {
@@ -220,19 +221,20 @@ impl AuctioneerHttpClient {
     // Public endpoints
     pub async fn health_check(&self) -> Result<bool> {
         let response = self
-            .request::<CheckHealthResponse, ()>(reqwest::Method::GET, "/health", None)
+            .request::<CheckHealthResponse, ()>(reqwest::Method::GET, "/health", None, false)
             .await?;
 
         Ok(response.status == "ok")
     }
 
     pub async fn list_quotes(&self, query: ListQuotesQuery) -> Result<ListQuotesResponse> {
-        self.request(reqwest::Method::GET, "/quotes", Some(query)).await
+        self.request(reqwest::Method::GET, "/quotes", Some(query), false)
+            .await
     }
 
     pub async fn list_swap_intents(&self, _query: ListSwapIntentsQuery) -> Result<ListSwapIntentsResponse> {
         // We're not using the query in tests to avoid serialization issues
-        self.request::<ListSwapIntentsResponse, ()>(reqwest::Method::GET, "/intents", None)
+        self.request::<ListSwapIntentsResponse, ()>(reqwest::Method::GET, "/intents", None, false)
             .await
     }
 
@@ -241,26 +243,26 @@ impl AuctioneerHttpClient {
             reqwest::Method::GET,
             &format!("/intents/{}", intent_id),
             None,
+            false,
         )
         .await
     }
 
     pub async fn get_stats(&self, query: GetStatsQuery) -> Result<GetStatsResponse> {
-        self.request(reqwest::Method::GET, "/stats", Some(query)).await
+        self.request(reqwest::Method::GET, "/stats", Some(query), false)
+            .await
     }
 
     pub async fn get_time_series(&self, query: GetTimeSeriesQuery) -> Result<GetTimeSeriesResponse> {
-        self.request(reqwest::Method::GET, "/time_series", Some(query))
+        self.request(reqwest::Method::GET, "/time_series", Some(query), false)
             .await
     }
 
     // Admin endpoints
     pub async fn list_fees(&self) -> Result<ListFeesResponse> {
-        let query = self.add_authority_to_query(ListFeesQuery {
-            authority: String::new(), // Will be replaced by add_authority_to_query
-        })?;
-
-        self.request(reqwest::Method::GET, "/fees", Some(query)).await
+        let query = ListFeesQuery {};
+        self.request(reqwest::Method::GET, "/fees", Some(query), true)
+            .await
     }
 
     pub async fn cancel_intent(
@@ -270,15 +272,15 @@ impl AuctioneerHttpClient {
         token_in_mint: Option<String>,
         src_user: Option<String>,
     ) -> Result<CancelResponse> {
-        let query = self.add_authority_to_query(CancelQuery {
-            authority: String::new(), // Will be replaced by add_authority_to_query
+        let query = CancelQuery {
             intent_id,
             src_chain,
             token_in_mint,
             src_user,
-        })?;
+        };
 
-        self.request(reqwest::Method::GET, "/cancel", Some(query)).await
+        self.request(reqwest::Method::GET, "/cancel", Some(query), true)
+            .await
     }
 
     pub async fn unlock_solver_funds(
@@ -289,26 +291,26 @@ impl AuctioneerHttpClient {
         amount_out: String,
         dst_user: String,
     ) -> Result<UnlockResponse> {
-        let query = self.add_authority_to_query(UnlockQuery {
-            authority: String::new(), // Will be replaced by add_authority_to_query
+        let query = UnlockQuery {
             intent_id,
             src_chain,
             token_out,
             amount_out,
             dst_user,
-        })?;
+        };
 
-        self.request(reqwest::Method::GET, "/unlock", Some(query)).await
+        self.request(reqwest::Method::GET, "/unlock", Some(query), true)
+            .await
     }
 
     pub async fn rescan_chain(&self, src_chain: IntentChain, start: u64, end: u64) -> Result<RescanResponse> {
-        let query = self.add_authority_to_query(RescanQuery {
-            authority: String::new(), // Will be replaced by add_authority_to_query
+        let query = RescanQuery {
             src_chain,
             start,
             end,
-        })?;
+        };
 
-        self.request(reqwest::Method::GET, "/rescan", Some(query)).await
+        self.request(reqwest::Method::GET, "/rescan", Some(query), true)
+            .await
     }
 }

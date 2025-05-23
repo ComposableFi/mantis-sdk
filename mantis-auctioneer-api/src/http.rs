@@ -69,11 +69,8 @@ pub struct ListQuotesResponse {
     pub solver_quotes: Vec<SolverQuote>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Validate, ToSchema)]
-pub struct ListFeesQuery {
-    #[validate(custom(function = "validate_authority"))]
-    pub authority: String,
-}
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct ListFeesQuery {}
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct ListFeesResponse {
@@ -163,10 +160,8 @@ pub struct SwapIntent {
     pub token_out_decimals: Option<i16>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Validate, ToSchema)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct RescanQuery {
-    #[validate(custom(function = "validate_authority"))]
-    pub authority: String,
     pub src_chain: IntentChain,
     pub start: u64,
     pub end: u64,
@@ -177,8 +172,6 @@ pub struct RescanResponse {}
 
 #[derive(Debug, Serialize, Deserialize, Validate, ToSchema)]
 pub struct UnlockQuery {
-    #[validate(custom(function = "validate_authority"))]
-    pub authority: String,
     #[validate(custom(function = "validate_intent_id"))]
     pub intent_id: u64,
     pub src_chain: IntentChain,
@@ -194,8 +187,6 @@ pub struct UnlockResponse {
 
 #[derive(Debug, Serialize, Deserialize, Validate, ToSchema)]
 pub struct CancelQuery {
-    #[validate(custom(function = "validate_authority"))]
-    pub authority: String,
     #[validate(custom(function = "validate_intent_id"))]
     pub intent_id: u64,
     pub src_chain: IntentChain,
@@ -208,12 +199,6 @@ pub struct CancelResponse {
     pub transaction: String,
 }
 
-fn validate_authority(authority: &str) -> Result<(), ValidationError> {
-    if authority != "4e6d9d0849740b385d60c59fded9ee97" {
-        return Err(ValidationError::new("Invalid authority"));
-    }
-    Ok(())
-}
 
 pub fn validate_intent_id(intent_id: u64) -> Result<(), ValidationError> {
     if !(100_000_000_000..=999_999_999_999).contains(&intent_id) {
