@@ -1,0 +1,27 @@
+[package]
+edition = "2021"
+name = "mantis-auctioneer-api"
+version = "0.1.0"
+
+[lib]
+name = "auctioneer_api"
+path = "src/lib.rs"
+
+[dependencies]
+alloy = { workspace = true, features = ["signers", "signer-local"] }
+anyhow = { workspace = true }
+axum = { workspace = true, features = ["ws", "macros"] }
+num = { workspace = true, features = ["serde"] }
+regex = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true, features = ["raw_value"] }
+solana-sdk = { workspace = true }
+strum = { workspace = true }
+strum_macros = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+utoipa = { workspace = true, features = ["axum_extras"] }
+utoipa-swagger-ui = { workspace = true, features = ["axum"] }
+uuid = { workspace = true, features = ["serde"] }
+validator = { workspace = true, features = ["derive"] }
+zip = { workspace = true }

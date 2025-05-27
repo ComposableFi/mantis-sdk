@@ -115,8 +115,12 @@ struct CancelArgs {
     token_in: Option<String>,
 }
 
+use tracing_subscriber;
+
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<()> {
+    // Initialize the tracing subscriber to use the RUST_LOG environment variable
+    tracing_subscriber::fmt::init();
     dotenv::dotenv()?;
     let cli = Cli::parse();
 
@@ -167,7 +171,7 @@ async fn main() -> Result<()> {
                     false,
                 )
                 .await
-                .context("Escrow funds operation failed")?;
+                .context("Solana escrow funds operation failed")?;
 
                 println!("Transaction: {}", signature);
             }
@@ -206,7 +210,7 @@ async fn main() -> Result<()> {
                     false,
                 )
                 .await
-                .context("Escrow funds operation failed")?;
+                .context("Ethereum escrow funds operation failed")?;
 
                 println!("Transaction: {}", receipt.transaction_hash);
             }

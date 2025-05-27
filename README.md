@@ -32,7 +32,7 @@ The `mantis_sdk::ethereum` module abstracts the Ethereum smart contract interact
 
 The `mantis_sdk::solana` module abstracts the Solana Anchor program interactions and provides various utility functions.
 
-The `mantis_sdk::auction` module provides a way for solvers to integrate with the intent auction process by communicating with the auctioneer API.
+The `mantis_sdk::auction` module provides a way for solvers to integrate with the intent auction process by communicating with the auctioneer API via a robust WebSocket client:
 
 # Mantis SDK 🔷
 

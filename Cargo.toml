@@ -1,6 +1,6 @@
 [workspace]
 exclude = []
-members = ["mantis-sdk", "mantis-cli"]
+members = ["mantis-sdk", "mantis-cli", "mantis-auctioneer-api"]
 resolver = "2"
 
 [workspace.package]
@@ -12,9 +12,9 @@ rust-version = "1.84.0"
 version = "0.1.0"
 
 [workspace.dependencies]
-anchor-client = { version = "0.31.0", features = ["async"] }
-anchor-lang = "0.31.0"
-anchor-spl = "0.31.0"
+anchor-client = { version = "0.31.1", features = ["async"] }
+anchor-lang = "0.31.1"
+anchor-spl = "0.31.1"
 solana-client = "~2.2.1"
 solana-logger = "~2.2.1"
 solana-program = "~2.2.1"
@@ -29,17 +29,37 @@ spl-token-2022 = { version = "8.0.1", features = ["no-entrypoint"] }
 
 alloy = { version = "0.9.2", features = ["full", "node-bindings", "signer-mnemonic"] }
 anyhow = "1.0.96"
-base64 = "0.22.1"
+axum = "0.8.0"
+axum-extra = "0.10.1"
+base64 = { version = "0.22.1", features = ["alloc"] }
 chrono = "0.4.40"
 clap = { version = "4.5.32", features = ["derive"] }
 dotenv = "0.15.0"
 env_logger = { version = "0.11.8" }
+futures = "0.3"
+futures-util = "0.3"
 log = { version = "0.4.27" }
 num = "0.4.3"
 rand = "0.8.0"
+regex = "1.11.1"
+reqwest = { version = "0.12.15", features = ["json"] }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
 strum = { version = "0.26.2", features = ["derive"] }
 strum_macros = "0.26.4"
+thiserror = "2.0.12"
 tokio = { version = "1.43.0", features = ["full"] }
+tokio-tungstenite = "0.20.1" 
+tokio-util = { version = "0.7" }
+# tokio-tungstenite = "0.26.2"  
 tracing = "0.1.41"
+tracing-subscriber = "0.3.19"
+url = "2.5.4"
+utoipa = "5.3.1"
+utoipa-swagger-ui = "9.0.0"
+uuid = { version = "1.16.0", features = ["v4"] }
+validator = "0.19.0"
+zip = "~2.4.2"
 
+auctioneer-api = { path = "mantis-auctioneer-api", package = "mantis-auctioneer-api" }
 mantis-sdk = { path = "mantis-sdk" }

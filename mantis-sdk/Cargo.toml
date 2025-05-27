@@ -27,9 +27,37 @@ alloy = { workspace = true }
 anyhow = { workspace = true }
 base64 = { workspace = true }
 chrono = { workspace = true }
+futures = { workspace = true }
 num = { workspace = true }
 rand = { workspace = true }
+reqwest = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
 strum = { workspace = true }
 strum_macros = { workspace = true }
+thiserror = { workspace = true }
 tokio = { workspace = true }
+tokio-tungstenite = { workspace = true }
+tokio-util = { workspace = true }
 tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+url = { workspace = true }
+uuid = { workspace = true }
+auctioneer-api = { workspace = true }
+bs58 = "0.5"
+dotenv = "0.15"
+
+[[example]]
+name = "simple_solver"
+path = "examples/simple_solver.rs"
+
+[[example]]
+name = "minimal_solver"
+path = "examples/minimal_solver.rs"
+
+[dev-dependencies]
+tracing-test = "0.2.5"
+hyper = { version = "0.14", features = ["full"] }
+tower = "0.4"
+tower-http = { version = "0.4", features = ["trace"] }
+regex = "1.11.1"

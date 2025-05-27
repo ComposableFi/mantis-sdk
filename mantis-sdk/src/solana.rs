@@ -25,9 +25,46 @@ use spl_associated_token_account::get_associated_token_address_with_program_id;
 use spl_associated_token_account::instruction::create_associated_token_account_idempotent;
 use spl_token::instruction::transfer;
 use spl_token::native_mint;
+use thiserror::Error;
 use tracing::{info, instrument};
 
 use crate::{random_intent_id, retry};
+
+#[derive(Error, Debug)]
+pub enum SolanaError {
+    #[error("Solana RPC client error: {0}")]
+    RpcClientError(String), // For errors from RpcClient interactions
+
+    #[error("Anchor client error: {0}")]
+    AnchorClientError(String), // For errors from anchor_client::Client
+
+    #[error("Program error: {0}")]
+    ProgramInteractionError(String), // For general on-chain program interaction issues
+
+    #[error("Transaction failed: {signature} with reason: {reason}")]
+    TransactionFailed { signature: String, reason: String },
+
+    #[error("Transaction confirmation timed out for signature: {signature}")]
+    TransactionConfirmationTimeout { signature: String },
+
+    #[error("Failed to build transaction: {0}")]
+    TransactionBuildError(String),
+
+    #[error("Account not found: {account_pubkey}")]
+    AccountNotFound { account_pubkey: String },
+
+    #[error("Data conversion or parsing error: {0}")]
+    ConversionError(String), // For BigUint, Pubkey parsing, etc.
+
+    #[error("Missing expected account data for: {account_description}")]
+    MissingAccountData { account_description: String },
+
+    #[error("Token operation failed for mint {mint_pubkey}: {details}")]
+    TokenOperationError { mint_pubkey: String, details: String },
+
+    #[error("An underlying anyhow error occurred: {0}")]
+    Anyhow(#[from] anyhow::Error), // Fallback for quick migration
+}
 
 declare_program!(escrow);
 
@@ -68,10 +105,12 @@ pub async fn escrow_funds(
     dst_chain_id: u8,
     timeout_sec: u64,
     ai_agent: bool,
-) -> Result<Signature> {
+) -> Result<Signature, SolanaError> {
     let cluster = Cluster::Custom(client.url(), String::default());
     let client_anchor = Client::new_with_options(cluster, payer.clone(), CommitmentConfig::processed());
-    let program = client_anchor.program(program_id)?;
+    let program = client_anchor
+        .program(program_id)
+        .map_err(|e| SolanaError::AnchorClientError(e.to_string()))?;
 
     let src_user = payer.pubkey();
     let timestamp = Utc::now().timestamp() as u64;
@@ -93,17 +132,25 @@ pub async fn escrow_funds(
         Pubkey::find_program_address(&[FEE_SEED, token_in_mint.as_ref()], &program_id);
 
     let (user_token_in_ata_ix, user_token_in_ata) =
-        create_associated_token_account_ix(client, payer.clone(), src_user, token_in_mint).await?;
+        create_associated_token_account_ix(client, payer.clone(), src_user, token_in_mint)
+            .await
+            .map_err(SolanaError::Anyhow)?;
 
     let (escrow_token_in_ata_ix, escrow_token_in_ata) =
-        create_associated_token_account_ix(client, payer.clone(), escrow_pda, token_in_mint).await?;
+        create_associated_token_account_ix(client, payer.clone(), escrow_pda, token_in_mint)
+            .await
+            .map_err(SolanaError::Anyhow)?;
+
+    let amount_in_u64 = amount_in
+        .try_into()
+        .map_err(|e| SolanaError::ConversionError(format!("Failed to convert amount_in to u64: {}", e)))?;
 
     let new_intent = types::NewIntent {
         intent_id,
         src_user,
         dst_user,
         token_in,
-        amount_in: amount_in.try_into()?,
+        amount_in: amount_in_u64,
         token_out,
         amount_out: amount_out.to_str_radix(10),
         timeout,
@@ -141,9 +188,14 @@ pub async fn escrow_funds(
         .instruction(escrow_token_in_ata_ix)
         .accounts(escrow_accounts)
         .args(escrow_args)
-        .instructions()?;
+        .instructions()
+        .map_err(|e| {
+            SolanaError::TransactionBuildError(format!("Failed to build escrow instructions: {}", e))
+        })?;
 
-    let recent_blockhash = retry(|| client.get_latest_blockhash(), 3).await?;
+    let recent_blockhash = retry(|| client.get_latest_blockhash(), 3)
+        .await
+        .map_err(|e| SolanaError::RpcClientError(format!("Failed to get latest blockhash: {}", e)))?;
 
     let escrow_transaction = Transaction::new_signed_with_payer(
         &escrow_instructions,
@@ -152,7 +204,13 @@ pub async fn escrow_funds(
         recent_blockhash,
     );
 
-    let signature = retry(|| client.send_and_confirm_transaction(&escrow_transaction), 3).await?;
+    let signature = retry(|| client.send_and_confirm_transaction(&escrow_transaction), 3)
+        .await
+        .map_err(|e| SolanaError::TransactionFailed {
+            signature: "unknown".to_string(),
+            reason: format!("Failed to send and confirm transaction: {}", e),
+        })?;
+
     Ok(signature)
 }
 
@@ -164,31 +222,33 @@ pub async fn cancel_intent(
     intent_id: u64,
     mut token_in: Pubkey,
     src_user: Pubkey,
-) -> Result<Signature> {
+) -> Result<Signature, SolanaError> {
     let cluster = Cluster::Custom(client.url(), String::default());
     let client_anchor = Client::new_with_options(cluster, payer.clone(), CommitmentConfig::confirmed());
-    let program = client_anchor.program(program_id)?;
+    let program = client_anchor
+        .program(program_id)
+        .map_err(|e| SolanaError::AnchorClientError(e.to_string()))?;
 
     if token_in == Pubkey::default() {
         token_in = native_mint::ID;
     }
 
     let (escrow_pda, _) = Pubkey::find_program_address(&[ESCROW_SEED], &program.id());
-
     let (escrow_sol_pda, _) = Pubkey::find_program_address(&[ESCROW_SEED, SOL_SEED], &program.id());
-
     let (fee_sol_pda, _) = Pubkey::find_program_address(&[FEE_SEED, SOL_SEED], &program.id());
-
     let (fee_token_in_pda, _) = Pubkey::find_program_address(&[FEE_SEED, token_in.as_ref()], &program.id());
-
     let (intent_pda, _) =
         Pubkey::find_program_address(&[INTENT_SEED, &intent_id.to_le_bytes()], &program.id());
 
     let (user_token_in_ata_ix, user_token_in_ata) =
-        create_associated_token_account_ix(client, payer.clone(), src_user, token_in).await?;
+        create_associated_token_account_ix(client, payer.clone(), src_user, token_in)
+            .await
+            .map_err(SolanaError::Anyhow)?;
 
     let (escrow_token_in_ata_ix, escrow_token_in_ata) =
-        create_associated_token_account_ix(client, payer.clone(), escrow_pda, token_in).await?;
+        create_associated_token_account_ix(client, payer.clone(), escrow_pda, token_in)
+            .await
+            .map_err(SolanaError::Anyhow)?;
 
     let cancel_accounts = accounts::CancelIntent {
         signer: payer.pubkey(),
@@ -216,9 +276,14 @@ pub async fn cancel_intent(
         .instruction(escrow_token_in_ata_ix)
         .accounts(cancel_accounts)
         .args(cancel_args)
-        .instructions()?;
+        .instructions()
+        .map_err(|e| {
+            SolanaError::TransactionBuildError(format!("Failed to build cancel intent instructions: {}", e))
+        })?;
 
-    let recent_blockhash = retry(|| client.get_latest_blockhash(), 3).await?;
+    let recent_blockhash = retry(|| client.get_latest_blockhash(), 3)
+        .await
+        .map_err(|e| SolanaError::RpcClientError(format!("Failed to get latest blockhash: {}", e)))?;
 
     let cancel_transaction = Transaction::new_signed_with_payer(
         &cancel_instructions,
@@ -227,7 +292,13 @@ pub async fn cancel_intent(
         recent_blockhash,
     );
 
-    let signature = retry(|| client.send_and_confirm_transaction(&cancel_transaction), 3).await?;
+    let signature = retry(|| client.send_and_confirm_transaction(&cancel_transaction), 3)
+        .await
+        .map_err(|e| SolanaError::TransactionFailed {
+            signature: "unknown".to_string(),
+            reason: format!("Failed to cancel intent {}: {}", intent_id, e),
+        })?;
+
     Ok(signature)
 }
 
@@ -470,10 +541,17 @@ pub async fn submit_through_rpc_multiple(
 }
 
 #[instrument(skip_all)]
-pub async fn get_token_program_id(client: &RpcClient, token_mint: &Pubkey) -> Result<Pubkey> {
-    match retry(|| client.get_account(token_mint), 3).await? {
+pub async fn get_token_program_id(client: &RpcClient, token_mint: &Pubkey) -> Result<Pubkey, SolanaError> {
+    match retry(|| client.get_account(token_mint), 3)
+        .await
+        .map_err(|_| SolanaError::AccountNotFound {
+            account_pubkey: token_mint.to_string(),
+        })? {
         account if account.owner == spl_token_2022::ID => Ok(spl_token_2022::ID),
         account if account.owner == spl_token::ID => Ok(spl_token::ID),
-        _ => Err(anyhow!("Failed to get token program ID for token {}", token_mint)),
+        _ => Err(SolanaError::TokenOperationError {
+            mint_pubkey: token_mint.to_string(),
+            details: format!("Could not determine token program ID for mint {}", token_mint),
+        }),
     }
 }
