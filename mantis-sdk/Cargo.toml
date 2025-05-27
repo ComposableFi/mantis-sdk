@@ -44,6 +44,16 @@ tracing-subscriber = { workspace = true }
 url = { workspace = true }
 uuid = { workspace = true }
 auctioneer-api = { workspace = true }
+bs58 = "0.5"
+dotenv = "0.15"
+
+[[example]]
+name = "simple_solver"
+path = "examples/simple_solver.rs"
+
+[[example]]
+name = "minimal_solver"
+path = "examples/minimal_solver.rs"
 
 [dev-dependencies]
 tracing-test = "0.2.5"
